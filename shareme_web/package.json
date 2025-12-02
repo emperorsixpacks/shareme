@@ -12,6 +12,7 @@
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch"
 	},
 	"devDependencies": {
+		"@originjs/vite-plugin-commonjs": "^1.0.3",
 		"@sveltejs/adapter-auto": "^7.0.0",
 		"@sveltejs/kit": "^2.48.5",
 		"@sveltejs/vite-plugin-svelte": "^6.2.1",
@@ -19,5 +20,17 @@
 		"svelte-check": "^4.3.4",
 		"typescript": "^5.9.3",
 		"vite": "^7.2.2"
+	},
+	"dependencies": {
+		"@tinymce/tinymce-svelte": "^3.2.0",
+		"@tiptap/core": "^3.12.0",
+		"@tiptap/extension-bubble-menu": "^3.12.0",
+		"@tiptap/extension-floating-menu": "^3.12.0",
+		"@tiptap/extension-link": "^3.12.0",
+		"@tiptap/pm": "^3.12.0",
+		"@tiptap/starter-kit": "^3.12.0",
+		"quill": "^2.0.3",
+		"svelte-tiptap": "^3.0.1",
+		"tinymce": "^8.2.2"
 	}
 }
