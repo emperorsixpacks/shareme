@@ -1,14 +1,17 @@
 <script lang="ts">
-    let contentType: "write" | "upload" = "write";
-    let price: number = 0.0;
+	import RichTextEditor from '$lib/components/RichTextEditor.svelte';
 
-    function setContentType(type: "write" | "upload") {
-        contentType = type;
-    }
+	let contentType: 'write' | 'upload' = 'write';
+	let price: number = 0.0;
+	let content: string = '';
 
-    function setQuickPrice(value: number) {
-        price = value;
-    }
+	function setContentType(type: 'write' | 'upload') {
+		contentType = type;
+	}
+
+	function setQuickPrice(value: number) {
+		price = value;
+	}
 </script>
 
 <!-- Create Content Section -->
@@ -22,22 +25,26 @@
     <!-- Content Type Selector -->
     <div class="flex gap-4 mb-8">
         <button
-            on:click={() => setContentType("write")}
+            on:click={() => setContentType('write')}
             class="flex-1 px-6 py-3 rounded-lg font-medium transition"
-            class:bg-purple-600={contentType === "write"}
-            class:bg-gray-400={contentType !== "write"}
-            class:border={contentType !== "write"}
-            class:border-gray-400={contentType !== "write"}
+            class:bg-purple-600={contentType === 'write'}
+            class:bg-white={contentType !== 'write'}
+            class:bg-opacity-5={contentType !== 'write'}
+            class:border={contentType !== 'write'}
+            class:border-white={contentType !== 'write'}
+            class:border-opacity-10={contentType !== 'write'}
         >
             ✍️ Write Article
         </button>
         <button
-            on:click={() => setContentType("upload")}
+            on:click={() => setContentType('upload')}
             class="flex-1 px-6 py-3 rounded-lg font-medium hover:bg-white/10 transition"
-            class:bg-purple-600={contentType === "upload"}
-            class:bg-gray-400={contentType !== "upload"}
-            class:border={contentType !== "upload"}
-            class:border-gray-400={contentType !== "upload"}
+            class:bg-purple-600={contentType === 'upload'}
+            class:bg-white={contentType !== 'upload'}
+            class:bg-opacity-5={contentType !== 'upload'}
+            class:border={contentType !== 'upload'}
+            class:border-white={contentType !== 'upload'}
+            class:border-opacity-10={contentType !== 'upload'}
         >
             📁 Upload File
         </button>
@@ -58,25 +65,24 @@
         </div>
 
         <!-- Write Content Section -->
-        {#if contentType === "write"}
+        {#if contentType === 'write'}
             <div>
                 <div class="mb-6">
                     <label class="block text-sm font-medium mb-2">Content</label
                     >
-                    <textarea
-                        placeholder="Write your content here..."
-                        rows="12"
-                        class="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 focus:outline-none focus:border-purple-500 transition resize-none"
-                    ></textarea>
+                    <RichTextEditor
+						bind:content
+						placeholder="Write your content here..."
+					/>
                     <p class="text-xs text-gray-500 mt-2">
-                        Supports markdown formatting
+                        Supports rich text formatting
                     </p>
                 </div>
             </div>
         {/if}
 
         <!-- Upload File Section -->
-        {#if contentType === "upload"}
+        {#if contentType === 'upload'}
             <div>
                 <div class="mb-6">
                     <label class="block text-sm font-medium mb-2"
@@ -104,7 +110,7 @@
                     <textarea
                         placeholder="Describe what buyers will get..."
                         rows="4"
-                        class="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 focus:outline-none focus:border-500 transition resize-none"
+                        class="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 focus:outline-none focus:border-purple-500 transition resize-none"
                     ></textarea>
                 </div>
             </div>
@@ -120,7 +126,10 @@
                 >
                 <div class="flex gap-4">
                     <div class="flex-1 relative">
-                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">$</span>
+                        <span
+                            class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400"
+                            >$</span
+                        >
                         <input
                             type="number"
                             placeholder="0.00"
@@ -129,7 +138,10 @@
                             bind:value={price}
                         />
                     </div>
-                    <span class="bg-white/5 border border-white/10 rounded-lg px-4 py-3 flex items-center">USDC</span>
+                    <span
+                        class="bg-white/5 border border-white/10 rounded-lg px-4 py-3 flex items-center"
+                        >USDC</span
+                    >
                 </div>
                 <div class="flex gap-2 mt-2">
                     <button
@@ -184,7 +196,9 @@
             >
                 <div class="flex justify-between items-center">
                     <span class="text-gray-400">Your earnings per sale:</span>
-                    <span class="text-2xl font-bold text-green-400">${(price * 0.8).toFixed(2)}</span>
+                    <span class="text-2xl font-bold text-green-400"
+                        >${(price * 0.8).toFixed(2)}</span
+                    >
                 </div>
             </div>
         </div>
