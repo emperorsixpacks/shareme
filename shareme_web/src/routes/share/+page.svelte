@@ -1,20 +1,23 @@
 <script lang="ts">
-	import RichTextEditor from '$lib/components/RichTextEditor.svelte';
+    import RichTextEditor from "$lib/components/RichTextEditor.svelte";
 
-	let contentType: 'write' | 'upload' = 'write';
-	let price: number = 0.0;
-	let content: string = '';
+    let contentType: "write" | "upload" = "write";
+    let price: number = 0.0;
+    let content: string = "";
 
-	function setContentType(type: 'write' | 'upload') {
-		contentType = type;
-	}
+    function setContentType(type: "write" | "upload") {
+        contentType = type;
+    }
 
-	function setQuickPrice(value: number) {
-		price = value;
-	}
+    function setQuickPrice(value: number) {
+        price = value;
+    }
 </script>
 
-<!-- Create Content Section -->
+<svelte:head>
+    <title>Create a new space</title>
+</svelte:head>
+
 <section class="container mx-auto px-6 py-12 max-w-4xl">
     <h1 class="text-4xl font-bold mb-2">Create Content</h1>
     <p class="text-gray-400 mb-8">
@@ -25,26 +28,26 @@
     <!-- Content Type Selector -->
     <div class="flex gap-4 mb-8">
         <button
-            on:click={() => setContentType('write')}
+            on:click={() => setContentType("write")}
             class="flex-1 px-6 py-3 rounded-lg font-medium transition"
-            class:bg-purple-600={contentType === 'write'}
-            class:bg-white={contentType !== 'write'}
-            class:bg-opacity-5={contentType !== 'write'}
-            class:border={contentType !== 'write'}
-            class:border-white={contentType !== 'write'}
-            class:border-opacity-10={contentType !== 'write'}
+            class:bg-purple-600={contentType === "write"}
+            class:bg-white={contentType !== "write"}
+            class:bg-opacity-5={contentType !== "write"}
+            class:border={contentType !== "write"}
+            class:border-white={contentType !== "write"}
+            class:border-opacity-10={contentType !== "write"}
         >
             ✍️ Write Article
         </button>
         <button
-            on:click={() => setContentType('upload')}
+            on:click={() => setContentType("upload")}
             class="flex-1 px-6 py-3 rounded-lg font-medium hover:bg-white/10 transition"
-            class:bg-purple-600={contentType === 'upload'}
-            class:bg-white={contentType !== 'upload'}
-            class:bg-opacity-5={contentType !== 'upload'}
-            class:border={contentType !== 'upload'}
-            class:border-white={contentType !== 'upload'}
-            class:border-opacity-10={contentType !== 'upload'}
+            class:bg-purple-600={contentType === "upload"}
+            class:bg-white={contentType !== "upload"}
+            class:bg-opacity-5={contentType !== "upload"}
+            class:border={contentType !== "upload"}
+            class:border-white={contentType !== "upload"}
+            class:border-opacity-10={contentType !== "upload"}
         >
             📁 Upload File
         </button>
@@ -65,15 +68,15 @@
         </div>
 
         <!-- Write Content Section -->
-        {#if contentType === 'write'}
+        {#if contentType === "write"}
             <div>
                 <div class="mb-6">
                     <label class="block text-sm font-medium mb-2">Content</label
                     >
                     <RichTextEditor
-						bind:content
-						placeholder="Write your content here..."
-					/>
+                        bind:content
+                        placeholder="Write your content here..."
+                    />
                     <p class="text-xs text-gray-500 mt-2">
                         Supports rich text formatting
                     </p>
@@ -82,7 +85,7 @@
         {/if}
 
         <!-- Upload File Section -->
-        {#if contentType === 'upload'}
+        {#if contentType === "upload"}
             <div>
                 <div class="mb-6">
                     <label class="block text-sm font-medium mb-2"
