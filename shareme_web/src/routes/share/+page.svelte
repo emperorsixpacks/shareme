@@ -1,9 +1,14 @@
 <script lang="ts">
     import RichTextEditor from "$lib/components/RichTextEditor.svelte";
+    import { wallet, provider, signer } from "$lib/stores/wallet";
+    import { ethers } from "ethers";
+    import { v4 as uuidv4 } from "uuid";
 
     let contentType: "write" | "upload" = "write";
     let price: number = 0.0;
     let content: string = "";
+    let title: string = "";
+    let isLoading = false;
 
     function setContentType(type: "write" | "upload") {
         contentType = type;
@@ -11,6 +16,67 @@
 
     function setQuickPrice(value: number) {
         price = value;
+    }
+
+    async function createSpace() {
+        if (!$signer) {
+            alert("Please connect your wallet first.");
+            return;
+        }
+
+        isLoading = true;
+
+        try {
+            // 1. Save content to DB via API
+            const response = await fetch('/api/shares', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    title,
+                    content,
+                    price,
+                    contentType,
+                }),
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to save content');
+            }
+
+            const savedContent = await response.json();
+            console.log('Content saved:', savedContent);
+
+            // 2. Create the smart contract wallet
+            const factoryAddress = "0x677577fE1b811D1B989F141fC0B9eb7c1e4a924d";
+            const factory = new ethers.Contract(
+                factoryAddress,
+                [
+                    "function createWallet(bytes32 salt) public returns (address)",
+                    "event WalletCreated(address indexed owner, address indexed wallet, bytes32 indexed salt)",
+                ],
+                $signer,
+            );
+
+                        const hex = savedContent.id.replace(/-/g, "");
+            const spaceId = "0x" + hex.padEnd(64, "0");
+
+            console.log("Creating a new space...");
+            const tx = await factory.createWallet(spaceId);
+            const receipt = await tx.wait();
+
+            const walletAddress = receipt.logs[0].args[1];
+
+            console.log(`Space created!`);
+            console.log(`  Wallet address: ${walletAddress}`);
+            alert(`Space created! Wallet address: ${walletAddress}`);
+        } catch (error) {
+            console.error("Failed to create space:", error);
+            alert("Failed to create space. See console for details.");
+        } finally {
+            isLoading = false;
+        }
     }
 </script>
 
@@ -64,6 +130,7 @@
                 type="text"
                 placeholder="Enter your content title..."
                 class="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 focus:outline-none focus:border-purple-500 transition"
+                bind:value={title}
             />
         </div>
 
@@ -208,9 +275,15 @@
 
         <!-- Create Button -->
         <button
-            class="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 py-4 rounded-lg font-semibold text-lg transition shadow-lg mt-6"
+            on:click={createSpace}
+            disabled={!$signer || isLoading}
+            class="w-full bg-gradient-to-r from-purple-600 to-pink-600 py-4 rounded-lg font-semibold text-lg transition shadow-lg mt-6 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-            Create & Get Link →
+            {#if isLoading}
+                Creating...
+            {:else}
+                Create & Get Link →
+            {/if}
         </button>
     </div>
 </section>
