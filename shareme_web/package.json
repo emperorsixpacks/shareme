@@ -37,6 +37,7 @@
 		"ethers": "^6.16.0",
 		"quill": "^2.0.3",
 		"svelte-tiptap": "^3.0.1",
+		"thirdweb": "^5.115.3",
 		"tinymce": "^8.2.2",
 		"uuid": "^13.0.0"
 	}
