@@ -19,7 +19,8 @@
 		"svelte": "^5.43.8",
 		"svelte-check": "^4.3.4",
 		"typescript": "^5.9.3",
-		"vite": "^7.2.2"
+		"vite": "^7.2.2",
+		"vite-plugin-node-polyfills": "^0.24.0"
 	},
 	"dependencies": {
 		"@tinymce/tinymce-svelte": "^3.2.0",
@@ -29,8 +30,14 @@
 		"@tiptap/extension-link": "^3.12.0",
 		"@tiptap/pm": "^3.12.0",
 		"@tiptap/starter-kit": "^3.12.0",
+		"@types/uuid": "^11.0.0",
+		"@web3-onboard/core": "^2.24.1",
+		"@web3-onboard/injected-wallets": "^2.11.3",
+		"@web3-onboard/walletconnect": "^2.6.3",
+		"ethers": "^6.16.0",
 		"quill": "^2.0.3",
 		"svelte-tiptap": "^3.0.1",
-		"tinymce": "^8.2.2"
+		"tinymce": "^8.2.2",
+		"uuid": "^13.0.0"
 	}
 }
