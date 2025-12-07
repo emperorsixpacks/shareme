@@ -16,7 +16,17 @@
     let fileDescription = "";
 
     function setContentType(type: "write" | "upload") {
+        // Clear content-specific fields when switching tabs
+        content = "";
+        title = "";
+        selectedFile = null;
+        fileDescription = "";
+        if (fileInput) {
+            fileInput.value = "";
+        }
+        
         contentType = type;
+        toast.info(`Switched to ${type === 'write' ? 'Write Article' : 'Upload File'} mode`);
     }
 
     function setQuickPrice(value: number) {
