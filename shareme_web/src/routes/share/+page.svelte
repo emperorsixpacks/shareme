@@ -1,6 +1,7 @@
 <script lang="ts">
     import RichTextEditor from "$lib/components/RichTextEditor.svelte";
     import { wallet, provider, signer } from "$lib/stores/wallet";
+    import { toast } from "$lib/stores/toast";
     import { ethers } from "ethers";
     import { v4 as uuidv4 } from "uuid";
 
@@ -9,6 +10,10 @@
     let content: string = "";
     let title: string = "";
     let isLoading = false;
+    let fileInput: HTMLInputElement;
+    let selectedFile: File | null = null;
+    let isDragging = false;
+    let fileDescription = "";
 
     function setContentType(type: "write" | "upload") {
         contentType = type;
@@ -16,6 +21,74 @@
 
     function setQuickPrice(value: number) {
         price = value;
+    }
+
+    function handleFileSelect(event: Event) {
+        const target = event.target as HTMLInputElement;
+        const file = target.files?.[0];
+        if (file) {
+            validateAndSetFile(file);
+        }
+    }
+
+    function validateAndSetFile(file: File) {
+        // Validate file size (100MB max)
+        const maxSize = 100 * 1024 * 1024; // 100MB in bytes
+        if (file.size > maxSize) {
+            toast.error('File size exceeds 100MB limit');
+            return;
+        }
+
+        selectedFile = file;
+        toast.success(`File "${file.name}" selected successfully!`);
+        
+        // Convert file to base64 for storage
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            content = e.target?.result as string;
+        };
+        reader.readAsDataURL(file);
+    }
+
+    function handleDragOver(event: DragEvent) {
+        event.preventDefault();
+        isDragging = true;
+    }
+
+    function handleDragLeave(event: DragEvent) {
+        event.preventDefault();
+        isDragging = false;
+    }
+
+    function handleDrop(event: DragEvent) {
+        event.preventDefault();
+        isDragging = false;
+        
+        const file = event.dataTransfer?.files[0];
+        if (file) {
+            validateAndSetFile(file);
+        }
+    }
+
+    function triggerFileInput() {
+        fileInput?.click();
+    }
+
+    function removeFile() {
+        selectedFile = null;
+        content = "";
+        if (fileInput) {
+            fileInput.value = "";
+        }
+        toast.info('File removed');
+    }
+
+    function formatFileSize(bytes: number): string {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
     }
 
     async function createSpace() {
@@ -158,18 +231,74 @@
                     <label class="block text-sm font-medium mb-2"
                         >Upload File</label
                     >
-                    <div
-                        class="border-2 border-dashed border-white/20 rounded-lg p-12 text-center hover:border-purple-500 transition cursor-pointer"
-                    >
-                        <div class="text-4xl mb-4">📤</div>
-                        <p class="text-gray-400 mb-2">
-                            Drag & drop your file here, or click to browse
-                        </p>
-                        <p class="text-xs text-gray-500">
-                            PDF, Video, Images, Code, 3D Assets - Max 100MB
-                        </p>
-                        <input type="file" class="hidden" />
-                    </div>
+                    
+                    {#if !selectedFile}
+                        <!-- File Drop Zone -->
+                        <div
+                            role="button"
+                            tabindex="0"
+                            on:click={triggerFileInput}
+                            on:keydown={(e) => e.key === 'Enter' && triggerFileInput()}
+                            on:dragover={handleDragOver}
+                            on:dragleave={handleDragLeave}
+                            on:drop={handleDrop}
+                            class="border-2 border-dashed rounded-lg p-12 text-center transition cursor-pointer {isDragging ? 'border-purple-500 bg-purple-500/10' : 'border-white/20 hover:border-purple-500'}"
+                        >
+                            <div class="text-4xl mb-4">📤</div>
+                            <p class="text-gray-400 mb-2">
+                                {isDragging ? 'Drop your file here' : 'Drag & drop your file here, or click to browse'}
+                            </p>
+                            <p class="text-xs text-gray-500">
+                                PDF, Video, Images, Code, 3D Assets - Max 100MB
+                            </p>
+                        </div>
+                        <input 
+                            type="file" 
+                            class="hidden" 
+                            bind:this={fileInput}
+                            on:change={handleFileSelect}
+                            accept="*/*"
+                        />
+                    {:else}
+                        <!-- Selected File Preview -->
+                        <div class="bg-white/5 border border-white/10 rounded-lg p-6">
+                            <div class="flex items-start justify-between">
+                                <div class="flex items-start gap-4 flex-1">
+                                    <div class="text-4xl">
+                                        {#if selectedFile.type.startsWith('image/')}
+                                            🖼️
+                                        {:else if selectedFile.type.startsWith('video/')}
+                                            🎥
+                                        {:else if selectedFile.type.includes('pdf')}
+                                            📄
+                                        {:else if selectedFile.type.startsWith('audio/')}
+                                            🎵
+                                        {:else}
+                                            📎
+                                        {/if}
+                                    </div>
+                                    <div class="flex-1">
+                                        <h4 class="font-semibold text-white mb-1">{selectedFile.name}</h4>
+                                        <p class="text-sm text-gray-400">
+                                            {formatFileSize(selectedFile.size)} • {selectedFile.type || 'Unknown type'}
+                                        </p>
+                                        <div class="mt-2 bg-green-500/20 text-green-400 text-xs px-2 py-1 rounded inline-block">
+                                            ✓ Ready to upload
+                                        </div>
+                                    </div>
+                                </div>
+                                <button
+                                    on:click={removeFile}
+                                    class="text-red-400 hover:text-red-300 transition p-2"
+                                    title="Remove file"
+                                >
+                                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                                        <path d="M15 5L5 15M5 5L15 15" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                    {/if}
                 </div>
 
                 <!-- Optional Description for Files -->
@@ -178,6 +307,7 @@
                         >Description (Optional)</label
                     >
                     <textarea
+                        bind:value={fileDescription}
                         placeholder="Describe what buyers will get..."
                         rows="4"
                         class="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 focus:outline-none focus:border-purple-500 transition resize-none"
