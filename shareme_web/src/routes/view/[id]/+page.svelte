@@ -1,6 +1,11 @@
 <script lang="ts">
     import { onMount } from 'svelte';
     import { page } from '$app/stores';
+    import { fetchContentWithPayment, createPaymentClient } from '$lib/payment';
+    import { walletStore } from '$lib/stores/wallet';
+    import { toast } from '$lib/stores/toast';
+    import SkeletonLoader from '$lib/components/SkeletonLoader.svelte';
+    import Confetti from '$lib/components/Confetti.svelte';
     
     let contentId = '';
     let content: any = null;
@@ -8,9 +13,23 @@
     let error = '';
     let paymentRequired = false;
     let paymentInfo: any = null;
+    let processingPayment = false;
+    let thirdwebClient: any = null;
+    let showConfetti = false;
 
     onMount(async () => {
         contentId = $page.params.id;
+        
+        // Initialize Thirdweb client if CLIENT_ID is available
+        const clientId = import.meta.env.PUBLIC_THIRDWEB_CLIENT_ID;
+        if (clientId && clientId !== 'placeholder_client_id') {
+            try {
+                thirdwebClient = await createPaymentClient(clientId);
+            } catch (err) {
+                console.warn('Failed to initialize Thirdweb client:', err);
+            }
+        }
+        
         await fetchContent();
     });
 
@@ -19,22 +38,37 @@
         error = '';
         
         try {
-            const response = await fetch(`/api/view/${contentId}`);
+            // Use the payment utility function with wrapFetchWithPayment
+            const response = await fetchContentWithPayment(
+                contentId,
+                thirdwebClient,
+                $walletStore,
+                paymentInfo?.price
+            );
             const data = await response.json();
             
             if (response.ok) {
                 content = data;
                 paymentRequired = false;
+                
+                // Show success toast and confetti if this was after a payment
+                if (paymentInfo) {
+                    toast.success('Payment successful! Content unlocked 🎉');
+                    showConfetti = true;
+                }
             } else if (response.status === 402) {
                 // Payment required
                 paymentRequired = true;
                 paymentInfo = data;
                 error = 'Payment required to view this content';
+                toast.info('This content requires payment to access');
             } else {
                 error = data.error || 'Failed to load content';
+                toast.error(error);
             }
         } catch (err) {
             error = 'An error occurred while loading content';
+            toast.error(error);
             console.error(err);
         } finally {
             loading = false;
@@ -42,17 +76,53 @@
     }
 
     async function handlePayment() {
-        // This would integrate with the payment flow
-        // For now, we'll show a message
-        alert('Payment integration would be handled here using the x-payment header');
+        processingPayment = true;
+        error = '';
+        
+        try {
+            // Check if wallet is connected
+            if (!$walletStore) {
+                error = 'Please connect your wallet first';
+                toast.warning('Please connect your wallet first');
+                processingPayment = false;
+                return;
+            }
+
+            // Check if Thirdweb client is initialized
+            if (!thirdwebClient) {
+                error = 'Thirdweb client not initialized. Please configure PUBLIC_THIRDWEB_CLIENT_ID';
+                toast.error('Payment system not configured');
+                processingPayment = false;
+                return;
+            }
+
+            toast.info('Processing payment...');
+            
+            // Fetch content with payment using wrapFetchWithPayment
+            // This will automatically handle the payment flow
+            await fetchContent();
+            
+        } catch (err: any) {
+            error = err.message || 'Payment failed';
+            toast.error(error);
+            console.error('Payment error:', err);
+        } finally {
+            processingPayment = false;
+        }
     }
 </script>
+
+<Confetti bind:show={showConfetti} />
 
 <div class="container">
     <div class="content-viewer">
         {#if loading}
             <div class="loading">
-                <p>Loading content...</p>
+                <SkeletonLoader type="title" />
+                <SkeletonLoader type="text" lines={1} />
+                <div style="margin: 2rem 0;">
+                    <SkeletonLoader type="text" lines={5} />
+                </div>
             </div>
         {:else if error && !paymentRequired}
             <div class="error">
@@ -72,8 +142,22 @@
                     </div>
                 {/if}
                 
-                <button on:click={handlePayment} class="pay-button">
-                    Pay to View Content
+                {#if error && !loading}
+                    <div class="payment-error">
+                        <p>⚠️ {error}</p>
+                    </div>
+                {/if}
+                
+                <button 
+                    on:click={handlePayment} 
+                    class="pay-button"
+                    disabled={processingPayment}
+                >
+                    {#if processingPayment}
+                        Processing Payment...
+                    {:else}
+                        Pay to View Content
+                    {/if}
                 </button>
                 
                 <p class="payment-note">
@@ -169,6 +253,20 @@
         color: #555;
     }
 
+    .payment-error {
+        background: #ffebee;
+        border: 1px solid #ef5350;
+        border-radius: 6px;
+        padding: 1rem;
+        margin: 1rem 0;
+        color: #c62828;
+    }
+
+    .payment-error p {
+        margin: 0;
+        font-size: 0.95rem;
+    }
+
     .pay-button {
         background: #1976d2;
         color: white;
@@ -177,11 +275,16 @@
         font-size: 1.1rem;
         border-radius: 6px;
         cursor: pointer;
-        transition: background 0.3s;
+        transition: background 0.3s, opacity 0.3s;
     }
 
-    .pay-button:hover {
+    .pay-button:hover:not(:disabled) {
         background: #1565c0;
+    }
+
+    .pay-button:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
     }
 
     .payment-note {

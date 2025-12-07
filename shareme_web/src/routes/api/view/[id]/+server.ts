@@ -1,19 +1,44 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { settlePayment, facilitator } from 'thirdweb/x402';
-import { createThirdwebClient } from 'thirdweb';
-import { avalancheFuji } from 'thirdweb/chains';
-import { USDC_FUJI_ADDRESS } from '$lib/constants';
 import { getShareById } from '$lib/db';
 
-const client = createThirdwebClient({
-    secretKey: process.env.THIRDWEB_SECRET_KEY || '',
-});
+// Thirdweb imports - only used when real credentials are provided
+let settlePayment: any;
+let facilitator: any;
+let createThirdwebClient: any;
+let avalancheFuji: any;
+let USDC_FUJI_ADDRESS: string;
 
-const thirdwebFacilitator = facilitator({
-    client,
-    serverWalletAddress: process.env.THIRDWEB_SERVER_WALLET_ADDRESS || '',
-});
+// Check if we have real Thirdweb credentials
+const hasThirdwebCredentials = 
+    process.env.THIRDWEB_SECRET_KEY && 
+    process.env.THIRDWEB_SECRET_KEY !== 'placeholder_secret_key_for_development';
+
+// Only initialize Thirdweb if we have real credentials
+let client: any;
+let thirdwebFacilitator: any;
+
+if (hasThirdwebCredentials) {
+    const thirdwebModule = await import('thirdweb');
+    const x402Module = await import('thirdweb/x402');
+    const chainsModule = await import('thirdweb/chains');
+    const constantsModule = await import('$lib/constants');
+    
+    createThirdwebClient = thirdwebModule.createThirdwebClient;
+    settlePayment = x402Module.settlePayment;
+    facilitator = x402Module.facilitator;
+    avalancheFuji = chainsModule.avalancheFuji;
+    USDC_FUJI_ADDRESS = constantsModule.USDC_FUJI_ADDRESS;
+    
+    client = createThirdwebClient({
+        secretKey: process.env.THIRDWEB_SECRET_KEY || '',
+    });
+
+    thirdwebFacilitator = facilitator({
+        client,
+        serverWalletAddress: process.env.THIRDWEB_SERVER_WALLET_ADDRESS || '',
+    });
+}
 
 export const GET: RequestHandler = async ({ request, params }) => {
     const contentId = params.id;
@@ -37,7 +62,23 @@ export const GET: RequestHandler = async ({ request, params }) => {
         });
     }
 
-    // Handle payment for paid content
+    // If Thirdweb credentials are not configured, return demo payment required response
+    if (!hasThirdwebCredentials) {
+        return json({
+            error: 'Payment required',
+            price: share.price,
+            walletAddress: share.walletAddress,
+            message: 'This content requires payment. Configure Thirdweb credentials to enable payments.',
+            demo: true,
+        }, { 
+            status: 402,
+            headers: {
+                'WWW-Authenticate': 'x402-payment-required',
+            }
+        });
+    }
+
+    // Handle payment for paid content with real Thirdweb
     const result = await settlePayment({
         resourceUrl: `/api/view/${contentId}`,
         method: 'GET',
