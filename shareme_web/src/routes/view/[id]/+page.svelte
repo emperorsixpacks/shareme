@@ -1,92 +1,92 @@
 <script lang="ts">
-    import { onMount } from 'svelte';
-    import { page } from '$app/stores';
-    import { fetchContentWithPayment, createPaymentClient } from '$lib/payment';
-    import { walletStore } from '$lib/stores/wallet';
-    import { toast } from '$lib/stores/toast';
-    import SkeletonLoader from '$lib/components/SkeletonLoader.svelte';
-    import Confetti from '$lib/components/Confetti.svelte';
-    
-    let contentId = '';
-    let content: any = null;
-    let loading = true;
-    let error = '';
-    let paymentRequired = false;
-    let paymentInfo: any = null;
-    let processingPayment = false;
-    let thirdwebClient: any = null;
-    let showConfetti = false;
+	import { onMount } from 'svelte';
+	import { page } from '$app/stores';
+	import { fetchContentWithPayment, createPaymentClient } from '$lib/payment';
+	import { wallet } from '$lib/stores/wallet';
+	import { toast } from '$lib/stores/toast';
+	import SkeletonLoader from '$lib/components/SkeletonLoader.svelte';
+	import Confetti from '$lib/components/Confetti.svelte';
 
-    onMount(async () => {
-        contentId = $page.params.id;
-        
-        // Initialize Thirdweb client if CLIENT_ID is available
-        const clientId = import.meta.env.PUBLIC_THIRDWEB_CLIENT_ID;
-        if (clientId && clientId !== 'placeholder_client_id') {
-            try {
-                thirdwebClient = await createPaymentClient(clientId);
-            } catch (err) {
-                console.warn('Failed to initialize Thirdweb client:', err);
-            }
-        }
-        
-        await fetchContent();
-    });
+	let contentId = '';
+	let content: any = null;
+	let loading = true;
+	let error = '';
+	let paymentRequired = false;
+	let paymentInfo: any = null;
+	let processingPayment = false;
+	let thirdwebClient: any = null;
+	let showConfetti = false;
 
-    async function fetchContent() {
-        loading = true;
-        error = '';
-        
-        try {
-            // Use the payment utility function with wrapFetchWithPayment
-            const response = await fetchContentWithPayment(
-                contentId,
-                thirdwebClient,
-                $walletStore,
-                paymentInfo?.price
-            );
-            const data = await response.json();
-            
-            if (response.ok) {
-                content = data;
-                paymentRequired = false;
-                
-                // Show success toast and confetti if this was after a payment
-                if (paymentInfo) {
-                    toast.success('Payment successful! Content unlocked 🎉');
-                    showConfetti = true;
-                }
-            } else if (response.status === 402) {
-                // Payment required
-                paymentRequired = true;
-                paymentInfo = data;
-                error = 'Payment required to view this content';
-                toast.info('This content requires payment to access');
-            } else {
-                error = data.error || 'Failed to load content';
-                toast.error(error);
-            }
-        } catch (err) {
-            error = 'An error occurred while loading content';
-            toast.error(error);
-            console.error(err);
-        } finally {
-            loading = false;
-        }
-    }
+	onMount(async () => {
+		contentId = $page.params.id;
 
-    async function handlePayment() {
-        processingPayment = true;
-        error = '';
-        
-        try {
-            // Check if wallet is connected
-            if (!$walletStore) {
-                error = 'Please connect your wallet first';
-                toast.warning('Please connect your wallet first');
-                processingPayment = false;
-                return;
-            }
+		// Initialize Thirdweb client if CLIENT_ID is available
+		const clientId = import.meta.env.PUBLIC_THIRDWEB_CLIENT_ID;
+		if (clientId && clientId !== 'placeholder_client_id') {
+			try {
+				thirdwebClient = await createPaymentClient(clientId);
+			} catch (err) {
+				console.warn('Failed to initialize Thirdweb client:', err);
+			}
+		}
+
+		await fetchContent();
+	});
+
+	async function fetchContent() {
+		loading = true;
+		error = '';
+
+		try {
+			// Use the payment utility function with wrapFetchWithPayment
+			const response = await fetchContentWithPayment(
+				contentId,
+				thirdwebClient,
+				$wallet,
+				paymentInfo?.price
+			);
+			const data = await response.json();
+
+			if (response.ok) {
+				content = data;
+				paymentRequired = false;
+
+				// Show success toast and confetti if this was after a payment
+				if (paymentInfo) {
+					toast.success('Payment successful! Content unlocked 🎉');
+					showConfetti = true;
+				}
+			} else if (response.status === 402) {
+				// Payment required
+				paymentRequired = true;
+				paymentInfo = data;
+				error = 'Payment required to view this content';
+				toast.info('This content requires payment to access');
+			} else {
+				error = data.error || 'Failed to load content';
+				toast.error(error);
+			}
+		} catch (err) {
+			error = 'An error occurred while loading content';
+			toast.error(error);
+			console.error(err);
+		} finally {
+			loading = false;
+		}
+	}
+
+	async function handlePayment() {
+		processingPayment = true;
+		error = '';
+
+		try {
+			// Check if wallet is connected
+			if (!$wallet) {
+				error = 'Please connect your wallet first';
+				toast.warning('Please connect your wallet first');
+				processingPayment = false;
+				return;
+			}
 
             // Check if Thirdweb client is initialized
             if (!thirdwebClient) {
