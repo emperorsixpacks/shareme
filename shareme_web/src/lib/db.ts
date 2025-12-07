@@ -23,6 +23,15 @@ export function getShareById(id: string): Share | undefined {
     return shares.find(s => s.id === id);
 }
 
+export function updateShare(id: string, data: Partial<Share>): Share | undefined {
+    const shareIndex = shares.findIndex(s => s.id === id);
+    if (shareIndex === -1) {
+        return undefined;
+    }
+    shares[shareIndex] = { ...shares[shareIndex], ...data };
+    return shares[shareIndex];
+}
+
 export function getAllShares(): Share[] {
     return shares;
 }
