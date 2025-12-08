@@ -7,6 +7,8 @@
 
     let data: any = {};
     let isCreating = false;
+    let shareLink = "";
+    let showSuccess = false;
 
     contentStore.subscribe((d) => {
         data = d;
@@ -129,13 +131,23 @@
             const updatedContent = await updateResponse.json();
             console.log("Content updated with wallet address:", updatedContent);
 
-            alert(`Space created! Wallet address: ${walletAddress}`);
+            // Generate the shareable link
+            const baseUrl = window.location.origin;
+            shareLink = `${baseUrl}/view/${savedContent.id}`;
+            showSuccess = true;
+            
+            toast.success("Content created successfully!");
         } catch (error) {
             console.error("Failed to create space:", error);
-            alert("Failed to create space. See console for details.");
+            toast.error("Failed to create space. See console for details.");
         } finally {
             isCreating = false;
         }
+    }
+
+    function copyLink() {
+        navigator.clipboard.writeText(shareLink);
+        toast.success("Link copied to clipboard!");
     }
     function handleBack() {
         currentStep.set(data.contentType === "article" ? 4 : 5);
@@ -151,54 +163,80 @@
     </div>
 
     <div class="step-content">
-        <div class="review-card">
-            <div class="review-item">
-                <span class="review-label">Type:</span>
-                <span class="review-value"
-                    >{data.contentType === "article"
-                        ? "✍️ Article"
-                        : "📁 File"}</span
-                >
+        {#if showSuccess}
+            <div class="success-card">
+                <div class="success-icon">✓</div>
+                <h2 class="success-title">Content Created Successfully!</h2>
+                <p class="success-subtitle">Share this link with your audience</p>
+                
+                <div class="link-container">
+                    <input 
+                        type="text" 
+                        value={shareLink} 
+                        readonly 
+                        class="link-input"
+                    />
+                    <button on:click={copyLink} class="copy-btn">
+                        Copy Link
+                    </button>
+                </div>
+                
+                <a href={shareLink} target="_blank" class="view-link">
+                    View Content →
+                </a>
             </div>
-            <div class="review-item">
-                <span class="review-label">Title:</span>
-                <span class="review-value">{data.title}</span>
-            </div>
-            <div class="review-item">
-                <span class="review-label">Price:</span>
-                <span class="review-value">${data.price} USDC</span>
-            </div>
-            {#if data.enableSubscription}
+        {:else}
+            <div class="review-card">
                 <div class="review-item">
-                    <span class="review-label">Subscription:</span>
+                    <span class="review-label">Type:</span>
                     <span class="review-value"
-                        >✓ Enabled (${data.minAmount} - ${data.maxAmount})</span
+                        >{data.contentType === "article"
+                            ? "✍️ Article"
+                            : "📁 File"}</span
                     >
                 </div>
-            {/if}
-            <div class="review-item highlight">
-                <span class="review-label">Your earnings:</span>
-                <span class="review-value"
-                    >${(data.price * 0.8).toFixed(2)} per sale</span
-                >
+                <div class="review-item">
+                    <span class="review-label">Title:</span>
+                    <span class="review-value">{data.title}</span>
+                </div>
+                <div class="review-item">
+                    <span class="review-label">Price:</span>
+                    <span class="review-value">${data.price} USDC</span>
+                </div>
+                {#if data.enableSubscription}
+                    <div class="review-item">
+                        <span class="review-label">Subscription:</span>
+                        <span class="review-value"
+                            >✓ Enabled (${data.minAmount} - ${data.maxAmount})</span
+                        >
+                    </div>
+                {/if}
+                <div class="review-item highlight">
+                    <span class="review-label">Your earnings:</span>
+                    <span class="review-value"
+                        >${(data.price * 0.8).toFixed(2)} per sale</span
+                    >
+                </div>
             </div>
-        </div>
+        {/if}
     </div>
 
-    <div class="step-actions">
-        <button
-            on:click={handleBack}
-            class="btn-secondary"
-            disabled={isCreating}>← Back</button
-        >
-        <button
-            on:click={handleCreate}
-            class="btn-primary"
-            disabled={isCreating || !$signer}
-        >
-            {isCreating ? "Creating..." : "Create & Get Link 🚀"}
-        </button>
-    </div>
+    {#if !showSuccess}
+        <div class="step-actions">
+            <button
+                on:click={handleBack}
+                class="btn-secondary"
+                disabled={isCreating}>← Back</button
+            >
+            <button
+                on:click={handleCreate}
+                class="btn-primary"
+                disabled={isCreating || !$signer}
+            >
+                {isCreating ? "Creating..." : "Create & Get Link"}
+            </button>
+        </div>
+    {/if}
 </div>
 
 <style>
@@ -294,5 +332,88 @@
     .btn-secondary:disabled {
         opacity: 0.5;
         cursor: not-allowed;
+    }
+
+    .success-card {
+        background: rgba(34, 197, 94, 0.1);
+        border: 2px solid rgba(34, 197, 94, 0.3);
+        border-radius: 1rem;
+        padding: 3rem 2rem;
+        text-align: center;
+    }
+
+    .success-icon {
+        width: 80px;
+        height: 80px;
+        background: rgba(34, 197, 94, 0.2);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1.5rem;
+        font-size: 3rem;
+        color: rgb(34, 197, 94);
+    }
+
+    .success-title {
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: white;
+        margin-bottom: 0.5rem;
+    }
+
+    .success-subtitle {
+        color: rgba(255, 255, 255, 0.7);
+        margin-bottom: 2rem;
+    }
+
+    .link-container {
+        display: flex;
+        gap: 0.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .link-input {
+        flex: 1;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 0.5rem;
+        padding: 0.75rem 1rem;
+        color: white;
+        font-size: 0.875rem;
+    }
+
+    .link-input:focus {
+        outline: none;
+        border-color: rgb(34, 197, 94);
+    }
+
+    .copy-btn {
+        background: rgb(34, 197, 94);
+        color: white;
+        border: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 0.5rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .copy-btn:hover {
+        background: rgb(22, 163, 74);
+        transform: translateY(-2px);
+    }
+
+    .view-link {
+        display: inline-block;
+        color: rgb(34, 197, 94);
+        text-decoration: none;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+
+    .view-link:hover {
+        color: rgb(22, 163, 74);
+        transform: translateX(4px);
     }
 </style>
