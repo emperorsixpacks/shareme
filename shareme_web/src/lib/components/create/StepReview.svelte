@@ -21,7 +21,6 @@
         }
 
         isCreating = true;
-
         try {
             // 1. Save content to DB via API (without wallet address)
             const response = await fetch("/api/shares", {
@@ -135,7 +134,7 @@
             const baseUrl = window.location.origin;
             shareLink = `${baseUrl}/view/${savedContent.id}`;
             showSuccess = true;
-            
+
             toast.success("Content created successfully!");
         } catch (error) {
             console.error("Failed to create space:", error);
@@ -167,20 +166,22 @@
             <div class="success-card">
                 <div class="success-icon">✓</div>
                 <h2 class="success-title">Content Created Successfully!</h2>
-                <p class="success-subtitle">Share this link with your audience</p>
-                
+                <p class="success-subtitle">
+                    Share this link with your audience
+                </p>
+
                 <div class="link-container">
-                    <input 
-                        type="text" 
-                        value={shareLink} 
-                        readonly 
+                    <input
+                        type="text"
+                        value={shareLink}
+                        readonly
                         class="link-input"
                     />
                     <button on:click={copyLink} class="copy-btn">
                         Copy Link
                     </button>
                 </div>
-                
+
                 <a href={shareLink} target="_blank" class="view-link">
                     View Content →
                 </a>

@@ -16,6 +16,13 @@
     let thirdwebClient: any = null;
     let showConfetti = false;
 
+    let pageTitle = "View Content";
+    $: if (content?.title) {
+        pageTitle = content.title;
+    } else if (paymentInfo?.title) {
+        pageTitle = paymentInfo.title;
+    }
+
     onMount(async () => {
         const clientId = "ba038bb079074b48e0c1870922aec22b";
         if (clientId) {
@@ -138,6 +145,11 @@
         }
     }
 </script>
+
+<svelte:head>
+    <title>{pageTitle} - ShareMe</title>
+    <meta name="description" content={`View the shared content: ${pageTitle}`} />
+</svelte:head>
 
 <Confetti bind:show={showConfetti} />
 
@@ -262,8 +274,10 @@
                 </header>
 
                 <div class="content-body">
-                    {#if content.contentType === "html"}
-                        {@html content.content}
+                    {#if content.contentType === "article"}
+                        <div class="tiptap prose max-w-none">
+                            {@html content.content}
+                        </div>
                     {:else}
                         <pre>{content.content}</pre>
                     {/if}
@@ -559,5 +573,28 @@
 
     .content-body :global(a:hover) {
         text-decoration: underline;
+    }
+
+    :global(.tiptap p) {
+        margin: 0.5rem 0;
+    }
+
+    :global(.tiptap h2) {
+        font-size: 1.5rem;
+        font-weight: bold;
+        margin: 1rem 0 0.5rem;
+    }
+
+    :global(.tiptap ul) {
+        padding-left: 1.5rem;
+        list-style: disc;
+    }
+
+    :global(.tiptap strong) {
+        font-weight: bold;
+    }
+
+    :global(.tiptap em) {
+        font-style: italic;
     }
 </style>
