@@ -192,35 +192,36 @@
     .container {
         max-width: 900px;
         margin: 0 auto;
-        padding: 2rem;
+        padding: 1rem 1rem 2rem;
     }
 
     .content-viewer {
         background: white;
         border-radius: 8px;
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-        padding: 2rem;
+        padding: 1.5rem;
     }
 
     .loading {
         text-align: center;
-        padding: 3rem;
+        padding: 2rem;
         color: #666;
     }
 
     .error {
         text-align: center;
-        padding: 2rem;
+        padding: 1.5rem;
         color: #d32f2f;
     }
 
     .error h2 {
-        margin-bottom: 1rem;
+        margin-bottom: 0.75rem;
+        font-size: 1.5rem;
     }
 
     .error a {
         display: inline-block;
-        margin-top: 1rem;
+        margin-top: 0.75rem;
         color: #1976d2;
         text-decoration: none;
     }
@@ -231,25 +232,25 @@
 
     .payment-required {
         text-align: center;
-        padding: 3rem 2rem;
+        padding: 2rem 1.5rem;
     }
 
     .payment-required h2 {
-        font-size: 2rem;
-        margin-bottom: 1rem;
+        font-size: 1.75rem;
+        margin-bottom: 0.75rem;
         color: #333;
     }
 
     .payment-details {
         background: #f5f5f5;
         border-radius: 8px;
-        padding: 1.5rem;
-        margin: 2rem 0;
+        padding: 1.25rem;
+        margin: 1.5rem 0;
         text-align: left;
     }
 
     .payment-details p {
-        margin: 0.5rem 0;
+        margin: 0.4rem 0;
         color: #555;
     }
 
@@ -257,22 +258,22 @@
         background: #ffebee;
         border: 1px solid #ef5350;
         border-radius: 6px;
-        padding: 1rem;
-        margin: 1rem 0;
+        padding: 0.875rem;
+        margin: 0.875rem 0;
         color: #c62828;
     }
 
     .payment-error p {
         margin: 0;
-        font-size: 0.95rem;
+        font-size: 0.9rem;
     }
 
     .pay-button {
         background: #1976d2;
         color: white;
         border: none;
-        padding: 1rem 2rem;
-        font-size: 1.1rem;
+        padding: 0.75rem 1.5rem;
+        font-size: 1rem;
         border-radius: 6px;
         cursor: pointer;
         transition: background 0.3s, opacity 0.3s;
@@ -288,19 +289,19 @@
     }
 
     .payment-note {
-        margin-top: 1.5rem;
-        font-size: 0.9rem;
+        margin-top: 1.25rem;
+        font-size: 0.875rem;
         color: #666;
     }
 
     .content-display header {
         border-bottom: 2px solid #e0e0e0;
-        padding-bottom: 1.5rem;
-        margin-bottom: 2rem;
+        padding-bottom: 1.25rem;
+        margin-bottom: 1.5rem;
     }
 
     .content-display h1 {
-        font-size: 2.5rem;
+        font-size: 2rem;
         margin-bottom: 0.5rem;
         color: #333;
     }

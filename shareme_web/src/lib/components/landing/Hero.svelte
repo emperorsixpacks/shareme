@@ -13,8 +13,8 @@
 </script>
 
 {#if !isLoading}
-    <div class="container mx-auto px-6 py-20 text-center">
-        <h1 class="text-5xl md:text-6xl font-bold mb-6 leading-tight">
+    <div class="container mx-auto px-4 sm:px-6 py-12 md:py-16 text-center">
+        <h1 class="text-4xl md:text-5xl font-bold mb-4 leading-tight">
             Monetize Your Content<br />
             <span
                 class="bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent"
@@ -23,20 +23,20 @@
             </span>
         </h1>
 
-        <p class="text-xl text-gray-300 mb-12 max-w-2xl mx-auto">
+        <p class="text-lg md:text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
             Share content behind paywalls. Get paid in seconds. Keep 80% of
             every sale.
         </p>
 
-        <div class="flex gap-4 justify-center">
+        <div class="flex flex-col sm:flex-row gap-3 justify-center">
             <button
-                class="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 px-8 py-4 rounded-lg font-semibold text-lg transition shadow-lg"
+                class="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 px-6 py-3 rounded-lg font-semibold text-base transition shadow-lg"
                 on:click={startCreating}
             >
                 Start Creating →
             </button>
             <button
-                class="border-2 border-purple-400 hover:bg-purple-400/10 px-8 py-4 rounded-lg font-semibold text-lg transition"
+                class="border-2 border-purple-400 hover:bg-purple-400/10 px-6 py-3 rounded-lg font-semibold text-base transition"
             >
                 Learn More
             </button>
