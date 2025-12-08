@@ -1,7 +1,8 @@
 // Payment utilities for handling x402 payments with Thirdweb
 const { wrapFetchWithPayment } = await import("thirdweb/x402");
-import { createWallet } from "thirdweb/wallets";
+import { createWallet, smartWallet } from "thirdweb/wallets";
 import { avalancheFuji } from "thirdweb/chains";
+import { createNormalizedFetch } from "$lib/utils";
 // Client-side Thirdweb client (uses clientId instead of secretKey)
 export async function createPaymentClient(clientId: string) {
   const { createThirdwebClient } = await import("thirdweb");
@@ -9,20 +10,6 @@ export async function createPaymentClient(clientId: string) {
     clientId,
   });
 }
-
-/**
- * Creates a normalized fetch function for a specific chain
- * This is required by Thirdweb's wrapFetchWithPayment
- */
-export function createNormalizedFetch() {
-  return async (
-    input: RequestInfo | URL,
-    init?: RequestInit,
-  ): Promise<Response> => {
-    return fetch(input, init);
-  };
-}
-
 /**
  * Wraps fetch with payment functionality using Thirdweb's x402 SDK
  * @param client - Thirdweb client instance
@@ -37,7 +24,8 @@ export async function fetchWithPayment(
   try {
     const wallet = createWallet("io.metamask");
     await wallet.connect({ client });
-    const normalizedFetch = createNormalizedFetch();
+
+    const normalizedFetch = createNormalizedFetch(avalancheFuji.id);
     const fetchWithPay = wrapFetchWithPayment(normalizedFetch, client, wallet, {
       maxValue: BigInt(10_000),
     });
