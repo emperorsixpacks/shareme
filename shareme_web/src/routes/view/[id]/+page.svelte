@@ -1,111 +1,108 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
-	import { page } from '$app/stores';
-	import { fetchContentWithPayment, createPaymentClient } from '$lib/payment';
-	import { wallet } from '$lib/stores/wallet';
-	import { toast } from '$lib/stores/toast';
-	import SkeletonLoader from '$lib/components/SkeletonLoader.svelte';
-	import Confetti from '$lib/components/Confetti.svelte';
+    import { onMount } from "svelte";
+    import { page } from "$app/stores";
+    import { fetchContentWithPayment, createPaymentClient } from "$lib/payment";
+    import { wallet } from "$lib/stores/wallet";
+    import { toast } from "$lib/stores/toast";
+    import SkeletonLoader from "$lib/components/SkeletonLoader.svelte";
+    import Confetti from "$lib/components/Confetti.svelte";
 
-	let contentId = '';
-	let content: any = null;
-	let loading = true;
-	let error = '';
-	let paymentRequired = false;
-	let paymentInfo: any = null;
-	let processingPayment = false;
-	let thirdwebClient: any = null;
-	let showConfetti = false;
+    let contentId = $page.params.id;
+    let content: any = null;
+    let loading = true;
+    let error = "";
+    let paymentRequired = false;
+    let paymentInfo: any = null;
+    let processingPayment = false;
+    let thirdwebClient: any = null;
+    let showConfetti = false;
 
-	onMount(async () => {
-		contentId = $page.params.id;
+    onMount(async () => {
+        const clientId = "ba038bb079074b48e0c1870922aec22b";
+        if (clientId && clientId !== "placeholder_client_id") {
+            try {
+                thirdwebClient = await createPaymentClient(clientId);
+            } catch (err) {
+                console.warn("Failed to initialize Thirdweb client:", err);
+            }
+        }
 
-		// Initialize Thirdweb client if CLIENT_ID is available
-		const clientId = import.meta.env.PUBLIC_THIRDWEB_CLIENT_ID;
-		if (clientId && clientId !== 'placeholder_client_id') {
-			try {
-				thirdwebClient = await createPaymentClient(clientId);
-			} catch (err) {
-				console.warn('Failed to initialize Thirdweb client:', err);
-			}
-		}
+        await fetchContent();
+    });
 
-		await fetchContent();
-	});
+    async function fetchContent() {
+        loading = true;
+        error = "";
 
-	async function fetchContent() {
-		loading = true;
-		error = '';
+        try {
+            // Use the payment utility function with wrapFetchWithPayment
+            const response = await fetchContentWithPayment(
+                contentId,
+                thirdwebClient,
+                $wallet,
+                paymentInfo?.price,
+            );
+            const data = await response.json();
 
-		try {
-			// Use the payment utility function with wrapFetchWithPayment
-			const response = await fetchContentWithPayment(
-				contentId,
-				thirdwebClient,
-				$wallet,
-				paymentInfo?.price
-			);
-			const data = await response.json();
+            if (response.ok) {
+                content = data;
+                paymentRequired = false;
 
-			if (response.ok) {
-				content = data;
-				paymentRequired = false;
+                // Show success toast and confetti if this was after a payment
+                if (paymentInfo) {
+                    toast.success("Payment successful! Content unlocked 🎉");
+                    showConfetti = true;
+                }
+            } else if (response.status === 402) {
+                // Payment required
+                paymentRequired = true;
+                paymentInfo = data;
+                error = "Payment required to view this content";
+                toast.info("This content requires payment to access");
+            } else {
+                error = data.error || "Failed to load content";
+                toast.error(error);
+            }
+        } catch (err) {
+            error = "An error occurred while loading content";
+            toast.error(error);
+            console.error(err);
+        } finally {
+            loading = false;
+        }
+    }
 
-				// Show success toast and confetti if this was after a payment
-				if (paymentInfo) {
-					toast.success('Payment successful! Content unlocked 🎉');
-					showConfetti = true;
-				}
-			} else if (response.status === 402) {
-				// Payment required
-				paymentRequired = true;
-				paymentInfo = data;
-				error = 'Payment required to view this content';
-				toast.info('This content requires payment to access');
-			} else {
-				error = data.error || 'Failed to load content';
-				toast.error(error);
-			}
-		} catch (err) {
-			error = 'An error occurred while loading content';
-			toast.error(error);
-			console.error(err);
-		} finally {
-			loading = false;
-		}
-	}
+    async function handlePayment() {
+        processingPayment = true;
+        error = "";
 
-	async function handlePayment() {
-		processingPayment = true;
-		error = '';
-
-		try {
-			// Check if wallet is connected
-			if (!$wallet) {
-				error = 'Please connect your wallet first';
-				toast.warning('Please connect your wallet first');
-				processingPayment = false;
-				return;
-			}
-
-            // Check if Thirdweb client is initialized
-            if (!thirdwebClient) {
-                error = 'Thirdweb client not initialized. Please configure PUBLIC_THIRDWEB_CLIENT_ID';
-                toast.error('Payment system not configured');
+        try {
+            // Check if wallet is connected
+            if (!$wallet) {
+                error = "Please connect your wallet first";
+                toast.warning("Please connect your wallet first");
                 processingPayment = false;
                 return;
             }
 
-            toast.info('Processing payment...');
-            
+            // Check if Thirdweb client is initialized
+            if (!thirdwebClient) {
+                error =
+                    "Thirdweb client not initialized. Please configure PUBLIC_THIRDWEB_CLIENT_ID";
+                toast.error("Payment system not configured");
+                processingPayment = false;
+                return;
+            }
+
+            toast.info("Processing payment...");
+
             // Fetch content with payment using wrapFetchWithPayment
             // This will automatically handle the payment flow
             await fetchContent();
-            
         } catch (err: any) {
-            error = err.message || 'Payment failed';
+            error = err.message || "Payment failed";
             toast.error(error);
-            console.error('Payment error:', err);
+            console.error("Payment error:", err);
         } finally {
             processingPayment = false;
         }
@@ -134,22 +131,25 @@
             <div class="payment-required">
                 <h2>🔒 Payment Required</h2>
                 <p>This content requires payment to access.</p>
-                
+
                 {#if paymentInfo}
                     <div class="payment-details">
-                        <p><strong>Price:</strong> {paymentInfo.price || 'N/A'} USDC</p>
+                        <p>
+                            <strong>Price:</strong>
+                            {paymentInfo.price || "N/A"} USDC
+                        </p>
                         <p><strong>Content ID:</strong> {contentId}</p>
                     </div>
                 {/if}
-                
+
                 {#if error && !loading}
                     <div class="payment-error">
                         <p>⚠️ {error}</p>
                     </div>
                 {/if}
-                
-                <button 
-                    on:click={handlePayment} 
+
+                <button
+                    on:click={handlePayment}
                     class="pay-button"
                     disabled={processingPayment}
                 >
@@ -159,25 +159,30 @@
                         Pay to View Content
                     {/if}
                 </button>
-                
+
                 <p class="payment-note">
-                    You'll need to connect your wallet and approve the payment transaction.
+                    You'll need to connect your wallet and approve the payment
+                    transaction.
                 </p>
             </div>
         {:else if content}
             <div class="content-display">
                 <header>
-                    <h1>{content.title || 'Untitled'}</h1>
+                    <h1>{content.title || "Untitled"}</h1>
                     {#if content.createdAt}
-                        <p class="date">Created: {new Date(content.createdAt).toLocaleDateString()}</p>
+                        <p class="date">
+                            Created: {new Date(
+                                content.createdAt,
+                            ).toLocaleDateString()}
+                        </p>
                     {/if}
                     {#if content.message}
                         <p class="success-message">✓ {content.message}</p>
                     {/if}
                 </header>
-                
+
                 <div class="content-body">
-                    {#if content.contentType === 'html'}
+                    {#if content.contentType === "html"}
                         {@html content.content}
                     {:else}
                         <pre>{content.content}</pre>
@@ -275,7 +280,9 @@
         font-size: 1.1rem;
         border-radius: 6px;
         cursor: pointer;
-        transition: background 0.3s, opacity 0.3s;
+        transition:
+            background 0.3s,
+            opacity 0.3s;
     }
 
     .pay-button:hover:not(:disabled) {

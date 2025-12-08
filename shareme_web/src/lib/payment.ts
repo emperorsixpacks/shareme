@@ -1,12 +1,11 @@
 // Payment utilities for handling x402 payments with Thirdweb
-import { USDC_FUJI_ADDRESS } from './constants';
-
+const { wrapFetchWithPayment } = await import("thirdweb/x402");
 // Client-side Thirdweb client (uses clientId instead of secretKey)
 export async function createPaymentClient(clientId: string) {
-    const { createThirdwebClient } = await import('thirdweb');
-    return createThirdwebClient({
-        clientId,
-    });
+  const { createThirdwebClient } = await import("thirdweb");
+  return createThirdwebClient({
+    clientId,
+  });
 }
 
 /**
@@ -14,9 +13,12 @@ export async function createPaymentClient(clientId: string) {
  * This is required by Thirdweb's wrapFetchWithPayment
  */
 export function createNormalizedFetch(chainId: number) {
-    return async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
-        return fetch(input, init);
-    };
+  return async (
+    input: RequestInfo | URL,
+    init?: RequestInit,
+  ): Promise<Response> => {
+    return fetch(input, init);
+  };
 }
 
 /**
@@ -24,38 +26,26 @@ export function createNormalizedFetch(chainId: number) {
  * @param client - Thirdweb client instance
  * @param wallet - Connected wallet instance
  * @param url - URL to fetch
- * @param price - Price in USDC (as bigint, e.g., 5n for 5 USDC)
  * @returns Response with payment handled
  */
 export async function fetchWithPayment(
-    client: any,
-    wallet: any,
-    url: string,
-    price: bigint
+  client: any,
+  wallet: any,
+  url: string,
 ): Promise<Response> {
-    try {
-        // Import Thirdweb's wrapFetchWithPayment
-        const { wrapFetchWithPayment } = await import('thirdweb/x402');
-        
-        // Create normalized fetch for Avalanche Fuji (chainId: 43113)
-        const normalizedFetch = createNormalizedFetch(43113);
-        
-        // Wrap fetch with payment - pass options object with maxValue
-        const fetchWithPay = wrapFetchWithPayment(
-            normalizedFetch,
-            client,
-            wallet,
-            {
-                maxValue: price
-            }
-        );
-        
-        // Execute the fetch with payment
-        return await fetchWithPay(url);
-    } catch (error) {
-        console.error('Payment fetch error:', error);
-        throw error;
-    }
+  try {
+    // Create normalized fetch for Avalanche Fuji (chainId: 43113)
+    const normalizedFetch = createNormalizedFetch(43113);
+
+    // Wrap fetch with payment
+    const fetchWithPay = wrapFetchWithPayment(normalizedFetch, client, wallet);
+
+    // Execute the fetch with payment
+    return await fetchWithPay(url);
+  } catch (error) {
+    console.error("Payment fetch error:", error);
+    throw error;
+  }
 }
 
 /**
@@ -66,26 +56,23 @@ export async function fetchWithPayment(
  * @param price - Price in USDC
  */
 export async function fetchContentWithPayment(
-    contentId: string,
-    client?: any,
-    wallet?: any,
-    price?: number
+  contentId: string,
+  client?: any,
+  wallet?: any,
+  price?: number,
 ): Promise<Response> {
-    const url = `/api/view/${contentId}`;
-    
-    // If no wallet or price, just fetch normally (for free content)
-    if (!wallet || !price || price === 0) {
-        return fetch(url, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-        });
-    }
-    
-    // Convert price to bigint (USDC has 6 decimals)
-    const priceInSmallestUnit = BigInt(Math.floor(price * 1_000_000));
-    
-    // Use Thirdweb's payment wrapper
-    return await fetchWithPayment(client, wallet, url, priceInSmallestUnit);
+  const url = `/api/view/${contentId}`;
+
+  // If no wallet or price, just fetch normally (for free content)
+  if (!wallet || !price || price === 0) {
+    return fetch(url, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+  }
+
+  // Use Thirdweb's payment wrapper
+  return await fetchWithPayment(client, wallet, url);
 }

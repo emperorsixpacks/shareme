@@ -27,49 +27,116 @@
         isLoading = true;
 
         try {
-            // 1. Save content to DB via API
-            const response = await fetch('/api/shares', {
-                method: 'POST',
+            // 1. Save content to DB via API (without wallet address)
+            const response = await fetch("/api/shares", {
+                method: "POST",
                 headers: {
-                    'Content-Type': 'application/json',
+                    "Content-Type": "application/json",
                 },
                 body: JSON.stringify({
                     title,
                     content,
                     price,
                     contentType,
+                    walletAddress: null, // Initially null
                 }),
             });
 
             if (!response.ok) {
-                throw new Error('Failed to save content');
+                throw new Error("Failed to save content");
             }
 
             const savedContent = await response.json();
-            console.log('Content saved:', savedContent);
+            console.log("Content saved:", savedContent);
 
             // 2. Create the smart contract wallet
             const factoryAddress = "0x677577fE1b811D1B989F141fC0B9eb7c1e4a924d";
-            const factory = new ethers.Contract(
-                factoryAddress,
-                [
-                    "function createWallet(bytes32 salt) public returns (address)",
-                    "event WalletCreated(address indexed owner, address indexed wallet, bytes32 indexed salt)",
-                ],
-                $signer,
-            );
+            const abi = [
+                "function createWallet(bytes32 salt) public returns (address)",
+                {
+                    anonymous: false,
+                    inputs: [
+                        {
+                            indexed: true,
+                            internalType: "address",
+                            name: "creator",
+                            type: "address",
+                        },
+                        {
+                            indexed: false,
+                            internalType: "address",
+                            name: "wallet",
+                            type: "address",
+                        },
+                    ],
+                    name: "WalletCreated",
+                    type: "event",
+                },
+            ];
 
-                        const hex = savedContent.id.replace(/-/g, "");
+            const factory = new ethers.Contract(factoryAddress, abi, $signer);
+
+            // Convert UUID -> bytes32
+            const hex = savedContent.id.replace(/-/g, "");
             const spaceId = "0x" + hex.padEnd(64, "0");
 
             console.log("Creating a new space...");
             const tx = await factory.createWallet(spaceId);
             const receipt = await tx.wait();
 
-            const walletAddress = receipt.logs[0].args[1];
+            console.log("Raw logs:", receipt.logs);
+
+            const iface = new ethers.Interface(abi);
+
+            let walletAddress = null;
+
+            for (const log of receipt.logs) {
+                try {
+                    const decoded = iface.parseLog(log);
+
+                    console.log(decoded);
+
+                    if (decoded.name === "WalletCreated") {
+                        walletAddress = decoded.args.wallet;
+                        console.log("Decoded WalletCreated:", decoded.args);
+                    }
+                } catch (e) {
+                    // log not part of this contract
+                }
+            }
+
+            if (!walletAddress) {
+                console.error(
+                    "Could not find WalletCreated event in receipt",
+                    receipt,
+                );
+                throw new Error(
+                    "Could not find WalletCreated event in transaction receipt",
+                );
+            }
 
             console.log(`Space created!`);
             console.log(`  Wallet address: ${walletAddress}`);
+
+            // 3. Update the share with the new wallet address
+            const updateResponse = await fetch("/api/shares", {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    id: savedContent.id,
+                    walletAddress,
+                }),
+            });
+
+            if (!updateResponse.ok) {
+                throw new Error("Failed to update content with wallet address");
+            }
+
+            const updatedContent = await updateResponse.json();
+            console.log("Content updated with wallet address:", updatedContent);
+
             alert(`Space created! Wallet address: ${walletAddress}`);
         } catch (error) {
             console.error("Failed to create space:", error);
