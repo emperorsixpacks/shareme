@@ -1,13 +1,12 @@
 <script lang="ts">
     import { onMount } from "svelte";
-    import { page } from "$app/state";
+    import { page } from "$app/stores";
     import { fetchContentWithPayment, createPaymentClient } from "$lib/payment";
-    import { wallet } from "$lib/stores/wallet";
     import { toast } from "$lib/stores/toast";
     import SkeletonLoader from "$lib/components/SkeletonLoader.svelte";
     import Confetti from "$lib/components/Confetti.svelte";
 
-    let contentId = page.params.id;
+    let contentId = $page.params.id;
     let content: any = null;
     let loading = true;
     let error = "";
@@ -56,8 +55,8 @@
                 // Payment required
                 paymentRequired = true;
                 paymentInfo = data;
-                error = "Payment required to view this content";
-                toast.info("This content requires payment to access");
+                error = data.errorMessage || "Payment required to view this content";
+                toast.info(data.errorMessage || "This content requires payment to access");
             } else {
                 error = data.error || "Failed to load content";
                 toast.error(error);
@@ -76,14 +75,6 @@
         error = "";
 
         try {
-            // Check if wallet is connected
-            if (!$wallet) {
-                error = "Please connect your wallet first";
-                toast.warning("Please connect your wallet first");
-                processingPayment = false;
-                return;
-            }
-
             // Check if Thirdweb client is initialized
             if (!thirdwebClient) {
                 error =
@@ -144,6 +135,13 @@
                 {#if error && !loading}
                     <div class="payment-error">
                         <p>⚠️ {error}</p>
+                        {#if paymentInfo?.fundWalletLink}
+                        <p style="margin-top: 0.5rem;">
+                            <a href={paymentInfo.fundWalletLink} target="_blank" rel="noopener noreferrer" style="font-weight: bold; text-decoration: underline;">
+                                Click here to top up your wallet
+                            </a>
+                        </p>
+                        {/if}
                     </div>
                 {/if}
 

@@ -1,5 +1,6 @@
 // Payment utilities for handling x402 payments with Thirdweb
 const { wrapFetchWithPayment } = await import("thirdweb/x402");
+import {} from "thirdweb/wallets/smart";
 // Client-side Thirdweb client (uses clientId instead of secretKey)
 export async function createPaymentClient(clientId: string) {
   const { createThirdwebClient } = await import("thirdweb");
@@ -30,17 +31,21 @@ export function createNormalizedFetch(chainId: number) {
  */
 export async function fetchWithPayment(
   client: any,
-  wallet: any,
   url: string,
 ): Promise<Response> {
   try {
-    // Create normalized fetch for Avalanche Fuji (chainId: 43113)
+    const wallet = createWallet("io.metamask");
+    await wallet.connect({
+      client,
+      smartAccount: {
+        chain: 43113,
+        useEip7702: false,
+      },
+    });
     const normalizedFetch = createNormalizedFetch(43113);
-
-    // Wrap fetch with payment
-    const fetchWithPay = wrapFetchWithPayment(normalizedFetch, client, wallet);
-
-    // Execute the fetch with payment
+    const fetchWithPay = wrapFetchWithPayment(normalizedFetch, client, wallet, {
+      maxValue: BigInt(10_000),
+    });
     return await fetchWithPay(url);
   } catch (error) {
     console.error("Payment fetch error:", error);
@@ -58,21 +63,10 @@ export async function fetchWithPayment(
 export async function fetchContentWithPayment(
   contentId: string,
   client?: any,
-  wallet?: any,
   price?: number,
 ): Promise<Response> {
   const url = `/api/view/${contentId}`;
 
-  // If no wallet or price, just fetch normally (for free content)
-  if (!wallet || !price || price === 0) {
-    return fetch(url, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
-  }
-
   // Use Thirdweb's payment wrapper
-  return await fetchWithPayment(client, wallet, url);
+  return await fetchWithPayment(client, url);
 }
