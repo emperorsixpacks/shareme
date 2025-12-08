@@ -65,13 +65,10 @@ export const GET: RequestHandler = async ({ request, params }) => {
   }
 
   // If Thirdweb credentials are not configured, return demo payment required response
-  console.log();
   if (!hasThirdwebCredentials) {
     return json(
       {
         error: "Payment required",
-        price: share.price,
-        walletAddress: share.walletAddress,
         message:
           "This content requires payment. Configure Thirdweb credentials to enable payments.",
         demo: true,

@@ -26,19 +26,51 @@
             }
         }
 
-        await fetchContent();
+        await fetchMeta();
     });
 
-    async function fetchContent() {
+    async function fetchMeta() {
         loading = true;
         error = "";
 
         try {
-            // Use the payment utility function with wrapFetchWithPayment
+            const response = await fetch(`/api/view/${contentId}/meta`);
+            const data = await response.json();
+
+            if (response.ok) {
+                // If content is free, fetch it right away
+                if (!data.price || data.price === 0) {
+                    await fetchContent();
+                } else {
+                    // Otherwise, set payment info and wait for user action
+                    paymentInfo = data;
+                    paymentRequired = true;
+                    loading = false;
+                }
+            } else {
+                error = data.error || "Failed to load content metadata";
+                toast.error(error);
+                loading = false;
+            }
+        } catch (err) {
+            error = "An error occurred while loading content metadata";
+            toast.error(error);
+            console.error(err);
+            loading = false;
+        }
+    }
+
+    async function fetchContent() {
+        // If not initiated by payment, set loading state
+        if (!processingPayment) {
+            loading = true;
+        }
+        error = "";
+
+        try {
             const response = await fetchContentWithPayment(
                 contentId,
                 thirdwebClient,
-                paymentInfo?.price,
             );
             const data = await response.json();
 
@@ -47,22 +79,28 @@
                 paymentRequired = false;
 
                 // Show success toast and confetti if this was after a payment
-                if (paymentInfo) {
+                if (paymentInfo && paymentInfo.price > 0) {
                     toast.success("Payment successful! Content unlocked 🎉");
                     showConfetti = true;
                 }
             } else if (response.status === 402) {
-                // Payment required
                 paymentRequired = true;
-                paymentInfo = data;
-                error = data.errorMessage || "Payment required to view this content";
-                toast.info(data.errorMessage || "This content requires payment to access");
+                // The payment modal will show the error from `fetchContentWithPayment`
+                // We update paymentInfo with the latest from the server
+                paymentInfo = { ...paymentInfo, ...data };
+                error =
+                    data.errorMessage ||
+                    "Payment required to view this content";
+                toast.info(
+                    data.errorMessage ||
+                        "This content requires payment to access",
+                );
             } else {
                 error = data.error || "Failed to load content";
                 toast.error(error);
             }
-        } catch (err) {
-            error = "An error occurred while loading content";
+        } catch (err: any) {
+            error = err.message || "An error occurred while loading content";
             toast.error(error);
             console.error(err);
         } finally {
@@ -75,7 +113,6 @@
         error = "";
 
         try {
-            // Check if Thirdweb client is initialized
             if (!thirdwebClient) {
                 error =
                     "Thirdweb client not initialized. Please configure PUBLIC_THIRDWEB_CLIENT_ID";
@@ -86,7 +123,6 @@
 
             toast.info("Processing payment...");
 
-            // Fetch content with payment using wrapFetchWithPayment
             // This will automatically handle the payment flow
             await fetchContent();
         } catch (err: any) {
@@ -136,11 +172,16 @@
                     <div class="payment-error">
                         <p>⚠️ {error}</p>
                         {#if paymentInfo?.fundWalletLink}
-                        <p style="margin-top: 0.5rem;">
-                            <a href={paymentInfo.fundWalletLink} target="_blank" rel="noopener noreferrer" style="font-weight: bold; text-decoration: underline;">
-                                Click here to top up your wallet
-                            </a>
-                        </p>
+                            <p style="margin-top: 0.5rem;">
+                                <a
+                                    href={paymentInfo.fundWalletLink}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    style="font-weight: bold; text-decoration: underline;"
+                                >
+                                    Click here to top up your wallet
+                                </a>
+                            </p>
                         {/if}
                     </div>
                 {/if}
