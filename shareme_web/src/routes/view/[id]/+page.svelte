@@ -39,7 +39,6 @@
             const response = await fetchContentWithPayment(
                 contentId,
                 thirdwebClient,
-                $wallet,
                 paymentInfo?.price,
             );
             const data = await response.json();
