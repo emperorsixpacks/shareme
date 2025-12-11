@@ -1,6 +1,9 @@
 import { json } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
-import { writeFile } from "fs/promises";
+import { FilebaseStorage } from "$lib/filebase";
+import type { FilebaseSettings } from "$lib/settings";
+import { logger } from "$lib/logger";
+import { env } from "$env/dynamic/private"; // Assuming environment variables are loaded this way
 
 function getExtension(filename: string) {
   const lastDot = filename.lastIndexOf(".");
@@ -9,6 +12,15 @@ function getExtension(filename: string) {
   }
   return filename.substring(lastDot);
 }
+
+// Initialize Filebase Storage
+const filebaseSettings: FilebaseSettings = {
+  filebase_access_key: env.FILEBASE_ACCESS_KEY || '',
+  filebase_secret_access_key: env.FILEBASE_SECRET_ACCESS_KEY || '',
+  filebase_bucket_name: env.FILEBASE_BUCKET_NAME || '',
+};
+
+const filebaseStorage = new FilebaseStorage(filebaseSettings);
 
 export const POST: RequestHandler = async ({ request }) => {
   try {
@@ -21,16 +33,27 @@ export const POST: RequestHandler = async ({ request }) => {
 
     const fileExtension = getExtension(file.name);
     const uniqueFileName = `${crypto.randomUUID()}${fileExtension}`;
-    const uploadPath = `static/uploads/${uniqueFileName}`;
+    const folderPath = "uploads"; // Define a folder path within the bucket
 
     const buffer = Buffer.from(await file.arrayBuffer());
-    await writeFile(uploadPath, buffer);
 
-    const fileUrl = `/uploads/${uniqueFileName}`;
+    const [key, uploadError] = await filebaseStorage.uploadBytes(
+      buffer,
+      uniqueFileName,
+      folderPath
+    );
+
+    if (uploadError) {
+      logger.error("Filebase upload failed:", uploadError);
+      return json({ error: "File upload failed" }, { status: 500 });
+    }
+
+    // Construct the URL for the uploaded file on Filebase
+    const fileUrl = `https://${filebaseSettings.filebase_bucket_name}.s3.filebase.com/${folderPath}/${key}`;
 
     return json({ url: fileUrl }, { status: 201 });
   } catch (error) {
-    console.error("File upload error:", error);
+    logger.error("File upload error:", error);
     return json({ error: "File upload failed" }, { status: 500 });
   }
 };
