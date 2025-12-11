@@ -1,6 +1,6 @@
 <script lang="ts">
     import { contentStore, currentStep } from "$lib/stores/createContent";
-    import { signer } from "$lib/stores/wallet";
+    import { signer, wallet, provider } from "$lib/stores/wallet";
     import { toast } from "$lib/stores/toast";
     import { ethers } from "ethers";
     // import { goto } from "$app/navigation";
@@ -15,6 +15,8 @@
     });
 
     async function handleCreate() {
+        console.log($wallet?.chains);
+        console.log(await $provider?.getNetwork());
         if (!$signer) {
             toast.error("Please connect your wallet first");
             return;
@@ -33,6 +35,7 @@
                     content: data.content,
                     price: data.price,
                     contentType: data.contentType,
+                    fileName: data.fileName,
                     walletAddress: null,
                 }),
             });
@@ -132,7 +135,11 @@
 
             // Generate the shareable link
             const baseUrl = window.location.origin;
-            shareLink = `${baseUrl}/view/${savedContent.id}`;
+            if (data.contentType === "file" && data.price === 0) {
+                shareLink = `${baseUrl}/api/download/${savedContent.id}`;
+            } else {
+                shareLink = `${baseUrl}/view/${savedContent.id}`;
+            }
             showSuccess = true;
 
             toast.success("Content created successfully!");

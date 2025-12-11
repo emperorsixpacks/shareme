@@ -26,14 +26,32 @@
         }
 
         selectedFile = file;
-        toast.success(`File "${file.name}" selected!`);
-        
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            const base64 = e.target?.result as string;
-            contentStore.setFile(file, base64);
-        };
-        reader.readAsDataURL(file);
+        uploadFile(file);
+    }
+
+    async function uploadFile(file: File) {
+        const formData = new FormData();
+        formData.append("file", file);
+
+        try {
+            const response = await fetch('/api/upload', {
+                method: 'POST',
+                body: formData,
+            });
+
+            if (!response.ok) {
+                throw new Error('Upload failed');
+            }
+
+            const result = await response.json();
+            contentStore.setFile(file, result.url);
+            toast.success(`File "${file.name}" uploaded!`);
+
+        } catch (error) {
+            toast.error('File upload failed');
+            console.error(error);
+            selectedFile = null;
+        }
     }
 
     function handleDragOver(event: DragEvent) {

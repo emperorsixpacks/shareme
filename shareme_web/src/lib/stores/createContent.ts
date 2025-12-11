@@ -7,7 +7,8 @@ export interface ContentData {
     title: string;
     content: string;
     file: File | null;
-    fileBase64: string;
+    fileName: string;
+    fileUrl: string;
     description: string;
     price: number;
     enableSubscription: boolean;
@@ -20,7 +21,8 @@ const initialData: ContentData = {
     title: '',
     content: '',
     file: null,
-    fileBase64: '',
+    fileName: '',
+    fileUrl: '',
     description: '',
     price: 0,
     enableSubscription: false,
@@ -36,7 +38,10 @@ function createContentStore() {
         setContentType: (type: ContentType) => update(data => ({ ...data, contentType: type })),
         setTitle: (title: string) => update(data => ({ ...data, title })),
         setContent: (content: string) => update(data => ({ ...data, content })),
-        setFile: (file: File | null, fileBase64: string) => update(data => ({ ...data, file, fileBase64 })),
+        setFile: (file: File | null, fileUrl: string) => {
+            const fileName = file ? file.name : '';
+            update(data => ({ ...data, file, content: fileUrl, fileName, fileUrl }));
+        },
         setDescription: (description: string) => update(data => ({ ...data, description })),
         setPrice: (price: number) => update(data => ({ ...data, price })),
         setSubscription: (enableSubscription: boolean) => update(data => ({ ...data, enableSubscription })),
