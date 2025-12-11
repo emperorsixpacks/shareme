@@ -1,5 +1,6 @@
 <script lang="ts">
 	import ConnectWallet from '$lib/components/ConnectWallet.svelte';
+    export let isViewPage: boolean = false;
 </script>
 
 <nav class="container mx-auto px-4 sm:px-6 py-4 flex justify-between items-center">
@@ -9,5 +10,7 @@
 	>
 		ShareMe
 	</a>
-	<ConnectWallet />
+	{#if !isViewPage}
+		<ConnectWallet />
+	{/if}
 </nav>
