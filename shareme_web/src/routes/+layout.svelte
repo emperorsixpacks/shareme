@@ -1,13 +1,13 @@
 <script lang="ts">
     import favicon from "$lib/assets/favicon.svg";
-    import { page } from "$app/stores";
+    import { page } from "$app/state";
 
     import Navbar from "$lib/components/landing/Navbar.svelte";
     import Footer from "$lib/components/landing/Footer.svelte";
     import Toast from "$lib/components/Toast.svelte";
     let { children } = $props();
 
-    $: isViewPage = $page.url.pathname.startsWith('/view/');
+    let isViewPage = $derived(page.url.pathname.startsWith("/view/"));
 </script>
 
 <svelte:head>
