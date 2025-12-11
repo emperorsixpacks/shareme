@@ -45,10 +45,13 @@ export async function fetchWithPayment(
  */
 export async function fetchContentWithPayment(
   contentId: string,
+  contentType: "article" | "file",
   client?: any,
-  price?: number,
 ): Promise<Response> {
-  const url = `/api/view/${contentId}`;
+  const url =
+    contentType === "article"
+      ? `/api/view/${contentId}`
+      : `/api/download/${contentId}`;
 
   // Use Thirdweb's payment wrapper
   return await fetchWithPayment(client, url);

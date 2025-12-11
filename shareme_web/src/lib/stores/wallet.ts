@@ -14,10 +14,10 @@ const onboard = Onboard({
   wallets: [injected, walletConnect],
   chains: [
     {
-      id: "0xa86",
+      id: "0xa869",
       token: "AVAX",
-      label: "Avalanche Mainnet",
-      rpcUrl: "https://api.avax.network/ext/bc/C/rpc",
+      label: "Avalanche fuji",
+      rpcUrl: "https://api.avax-test.network/ext/bc/C/rpc",
     },
   ],
   appMetadata: {
@@ -31,13 +31,16 @@ export const wallet = writable<WalletState | null>(null);
 export const provider = writable<ethers.BrowserProvider | null>(null);
 export const signer = writable<ethers.Signer | null>(null);
 
-onboard.state.select("wallets").subscribe((wallets) => {
+onboard.state.select("wallets").subscribe(async (wallets) => {
   if (wallets[0]) {
+    if (wallets[0].chains[0].id !== '0xa869') {
+      await onboard.setChain({ chainId: '0xa869' });
+    }
     wallet.set(wallets[0]);
-    const ethersProvider = new ethers.BrowserProvider(
-      wallets[0].provider,
-      "any",
-    );
+    const ethersProvider = new ethers.BrowserProvider(wallets[0].provider, {
+      name: "Avalanche fuji",
+      chainId: 43113,
+    });
     provider.set(ethersProvider);
     ethersProvider.getSigner().then(signer.set);
   } else {
@@ -50,12 +53,16 @@ onboard.state.select("wallets").subscribe((wallets) => {
 export const connect = async () => {
   const wallets = await onboard.connectWallet();
   if (wallets[0]) {
+    if (wallets[0].chains[0].id !== '0xa869') {
+      await onboard.setChain({ chainId: '0xa869' });
+    }
     wallet.set(wallets[0]);
-    const ethersProvider = new ethers.BrowserProvider(
-      wallets[0].provider,
-      "any",
-    );
-    console.log(ethersProvider)
+    console.log(wallets);
+    const ethersProvider = new ethers.BrowserProvider(wallets[0].provider, {
+      name: "Avalanche fuji",
+      chainId: 43113,
+    });
+    console.log(ethersProvider);
     provider.set(ethersProvider);
     signer.set(await ethersProvider.getSigner());
   }
