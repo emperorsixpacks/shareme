@@ -1,6 +1,6 @@
 import { json } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
-import { getShareById } from "$lib/db";
+import { getShareById } from "$lib/server/db";
 import dotenv from "dotenv";
 
 dotenv.config();
@@ -47,10 +47,13 @@ export const GET: RequestHandler = async ({ request, params }) => {
   const paymentData = request.headers.get("x-payment");
 
   // Find the content by ID
-  const share = getShareById(contentId);
+  const share = await getShareById(contentId);
 
-  if (!share) {
-    return json({ error: "Content not found" }, { status: 404 });
+  if (!share || share.contentType !== "article") {
+    return json(
+      { error: "Content not found or not an article" },
+      { status: 404 },
+    );
   }
 
   // If no price is set, return content directly (free content)
@@ -60,6 +63,7 @@ export const GET: RequestHandler = async ({ request, params }) => {
       title: share.title,
       content: share.content,
       contentType: share.contentType,
+      fileName: share.fileName,
       createdAt: share.createdAt,
     });
   }
@@ -82,22 +86,45 @@ export const GET: RequestHandler = async ({ request, params }) => {
     );
   }
 
+  // Destructure content to avoid passing it around
+  const { content, ...shareMeta } = share;
+  let result: any;
+  console.log(thirdwebFacilitator);
+
   // Handle payment for paid content with real Thirdweb
-  const result = await settlePayment({
-    resourceUrl: `http://localhost:5173/api/view/${contentId}`,
-    method: "GET",
-    paymentData,
-    payTo: share.walletAddress,
-    network: avalancheFuji,
-    price: {
-      amount: String(share.price * 1000000),
-      asset: {
-        address: USDC_FUJI_ADDRESS,
-        decimals: 6,
+  try {
+    result = await settlePayment({
+      resourceUrl: `http://localhost:5173/api/view/${contentId}`,
+      method: "GET",
+      paymentData,
+      payTo: shareMeta.walletAddress,
+      network: avalancheFuji,
+      price: {
+        amount: String(shareMeta.price * 1000000),
+        asset: {
+          address: USDC_FUJI_ADDRESS,
+          decimals: 6,
+        },
       },
-    },
-    facilitator: thirdwebFacilitator,
-  });
+      facilitator: thirdwebFacilitator,
+    });
+  } catch (e) {
+    console.log(e);
+    return json(
+      {
+        error: "Payment required",
+        message:
+          "This content requires payment. Configure Thirdweb credentials to enable payments.",
+        demo: true,
+      },
+      {
+        status: 402,
+        headers: {
+          "WWW-Authenticate": "x402-payment-required",
+        },
+      },
+    );
+  }
 
   // If payment is successful, return the content
   if (result.status === 200) {
@@ -106,6 +133,7 @@ export const GET: RequestHandler = async ({ request, params }) => {
       title: share.title,
       content: share.content,
       contentType: share.contentType,
+      fileName: share.fileName,
       createdAt: share.createdAt,
       message: "Payment successful! Access granted.",
     });

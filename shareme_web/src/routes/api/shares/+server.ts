@@ -6,10 +6,10 @@ import {
   getAllShares,
   type Share,
   updateShare,
-} from "$lib/db";
+} from "$lib/server/db";
 
 export const POST: RequestHandler = async ({ request }) => {
-  const { content, price, contentType, title, walletAddress } =
+  const { content, price, contentType, title, walletAddress, fileName } =
     await request.json();
 
   const newShare: Share = {
@@ -19,10 +19,11 @@ export const POST: RequestHandler = async ({ request }) => {
     contentType,
     title,
     walletAddress,
+    fileName,
     createdAt: new Date(),
   };
 
-  addShare(newShare);
+  await addShare(newShare);
 
   return json(newShare, { status: 201 });
 };
@@ -31,14 +32,14 @@ export const GET: RequestHandler = async ({ url }) => {
   const id = url.searchParams.get("id");
 
   if (id) {
-    const share = getShareById(id);
+    const share = await getShareById(id);
     if (!share) {
       return json({ error: "Content not found" }, { status: 404 });
     }
     return json(share);
   }
 
-  return json(getAllShares());
+  return json(await getAllShares());
 };
 
 export const PUT: RequestHandler = async ({ request }) => {
@@ -48,7 +49,7 @@ export const PUT: RequestHandler = async ({ request }) => {
     return json({ error: "Missing id or walletAddress" }, { status: 400 });
   }
 
-  const share = getShareById(id);
+  const share = await getShareById(id);
 
   if (!share) {
     return json({ error: "Content not found" }, { status: 404 });
@@ -57,7 +58,7 @@ export const PUT: RequestHandler = async ({ request }) => {
   const updatedShareData: Partial<Share> = { walletAddress };
 
   try {
-    const updatedShare = updateShare(id, updatedShareData);
+    const updatedShare = await updateShare(id, updatedShareData);
     return json(updatedShare);
   } catch (e) {
     return json({ error: "Failed to update share" }, { status: 500 });

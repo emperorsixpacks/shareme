@@ -45,12 +45,15 @@
             const data = await response.json();
 
             if (response.ok) {
-                // If content is free, fetch it right away
+                paymentInfo = data;
                 if (!data.price || data.price === 0) {
-                    await fetchContent();
+                    if (data.contentType === 'article') {
+                        await fetchContent();
+                    } else {
+                        content = data;
+                        loading = false;
+                    }
                 } else {
-                    // Otherwise, set payment info and wait for user action
-                    paymentInfo = data;
                     paymentRequired = true;
                     loading = false;
                 }
@@ -68,7 +71,6 @@
     }
 
     async function fetchContent() {
-        // If not initiated by payment, set loading state
         if (!processingPayment) {
             loading = true;
         }
@@ -77,6 +79,7 @@
         try {
             const response = await fetchContentWithPayment(
                 contentId,
+                'article',
                 thirdwebClient,
             );
             const data = await response.json();
@@ -85,15 +88,12 @@
                 content = data;
                 paymentRequired = false;
 
-                // Show success toast and confetti if this was after a payment
                 if (paymentInfo && paymentInfo.price > 0) {
                     toast.success("Payment successful! Content unlocked 🎉");
                     showConfetti = true;
                 }
             } else if (response.status === 402) {
                 paymentRequired = true;
-                // The payment modal will show the error from `fetchContentWithPayment`
-                // We update paymentInfo with the latest from the server
                 paymentInfo = { ...paymentInfo, ...data };
                 error =
                     data.errorMessage ||
@@ -103,7 +103,6 @@
                         "This content requires payment to access",
                 );
             } else if (response.status === 404) {
-                // Content not found
                 error = "Content not found. It may have been deleted or the link is invalid.";
                 toast.error(error);
             } else {
@@ -125,17 +124,33 @@
 
         try {
             if (!thirdwebClient) {
-                error =
-                    "Thirdweb client not initialized. Please configure PUBLIC_THIRDWEB_CLIENT_ID";
+                error = "Thirdweb client not initialized.";
                 toast.error("Payment system not configured");
-                processingPayment = false;
                 return;
             }
 
             toast.info("Processing payment...");
 
-            // This will automatically handle the payment flow
-            await fetchContent();
+            if (paymentInfo.contentType === 'article') {
+                await fetchContent();
+            } else if (paymentInfo.contentType === 'file') {
+                const response = await fetchContentWithPayment(
+                    contentId,
+                    'file',
+                    thirdwebClient
+                );
+
+                if (response.ok) {
+                    toast.success("Download will begin shortly!");
+                    // Reload to reflect unlocked state (e.g., for free access next time)
+                    // A more advanced implementation could avoid a full reload.
+                    setTimeout(() => window.location.reload(), 2000);
+                } else {
+                    const data = await response.json();
+                    error = data.errorMessage || "Payment failed";
+                    toast.error(error);
+                }
+            }
         } catch (err: any) {
             error = err.message || "Payment failed";
             toast.error(error);
@@ -277,6 +292,20 @@
                     {#if content.contentType === "article"}
                         <div class="tiptap prose max-w-none">
                             {@html content.content}
+                        </div>
+                    {:else if content.contentType === "file"}
+                        <div class="file-download-container">
+                            <h2 class="download-title">You've unlocked a file!</h2>
+                            <p class="download-subtitle">Click the button below to download your content.</p>
+                            <div class="file-card">
+                                <div class="file-icon">📁</div>
+                                <div class="file-details">
+                                    <span class="file-name">{content.fileName || 'download'}</span>
+                                </div>
+                                <a href={`/api/download/${contentId}`} class="download-button">
+                                    Download
+                                </a>
+                            </div>
                         </div>
                     {:else}
                         <pre>{content.content}</pre>
@@ -596,5 +625,62 @@
 
     :global(.tiptap em) {
         font-style: italic;
+    }
+
+    .file-download-container {
+        text-align: center;
+        padding: 2rem;
+    }
+
+    .download-title {
+        font-size: 1.75rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+    }
+
+    .download-subtitle {
+        color: #666;
+        margin-bottom: 2rem;
+    }
+
+    .file-card {
+        display: flex;
+        align-items: center;
+        background: #f5f5f5;
+        border-radius: 8px;
+        padding: 1.5rem;
+        max-width: 500px;
+        margin: 0 auto;
+    }
+
+    .file-icon {
+        font-size: 2.5rem;
+        margin-right: 1.5rem;
+    }
+
+    .file-details {
+        flex: 1;
+        text-align: left;
+    }
+
+    .file-name {
+        font-weight: 600;
+        color: #333;
+    }
+
+    .download-button {
+        background: #1976d2;
+        color: white;
+        border: none;
+        padding: 0.75rem 1.5rem;
+        font-size: 1rem;
+        border-radius: 6px;
+        cursor: pointer;
+        text-decoration: none;
+        transition: background 0.3s;
+    }
+
+    .download-button:hover {
+        background: #1565c0;
     }
 </style>
