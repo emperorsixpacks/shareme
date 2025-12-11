@@ -1,8 +1,8 @@
 import { json } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
-import { FilebaseStorage } from "$lib/filebase";
-import type { FilebaseSettings } from "$lib/settings";
-import { logger } from "$lib/logger";
+import { FilebaseStorage } from "$lib/server/filebase";
+import type { FilebaseSettings } from "$lib/server/settings";
+import { logger } from "$lib/server/logger";
 import { env } from "$env/dynamic/private"; // Assuming environment variables are loaded this way
 
 function getExtension(filename: string) {
@@ -15,9 +15,9 @@ function getExtension(filename: string) {
 
 // Initialize Filebase Storage
 const filebaseSettings: FilebaseSettings = {
-  filebase_access_key: env.FILEBASE_ACCESS_KEY || '',
-  filebase_secret_access_key: env.FILEBASE_SECRET_ACCESS_KEY || '',
-  filebase_bucket_name: env.FILEBASE_BUCKET_NAME || '',
+  filebase_access_key: env.FILEBASE_ACCESS_KEY || "",
+  filebase_secret_access_key: env.FILEBASE_SECRET_ACCESS_KEY || "",
+  filebase_bucket_name: env.FILEBASE_BUCKET_NAME || "",
 };
 
 const filebaseStorage = new FilebaseStorage(filebaseSettings);
@@ -33,14 +33,14 @@ export const POST: RequestHandler = async ({ request }) => {
 
     const fileExtension = getExtension(file.name);
     const uniqueFileName = `${crypto.randomUUID()}${fileExtension}`;
-    const folderPath = "uploads"; // Define a folder path within the bucket
+    const folderPath = "uploads";
 
     const buffer = Buffer.from(await file.arrayBuffer());
 
     const [key, uploadError] = await filebaseStorage.uploadBytes(
       buffer,
       uniqueFileName,
-      folderPath
+      folderPath,
     );
 
     if (uploadError) {

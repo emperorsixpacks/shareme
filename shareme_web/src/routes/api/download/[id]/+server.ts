@@ -3,9 +3,9 @@ import type { RequestHandler } from "./$types";
 import { getShareById } from "$lib/server/db";
 import dotenv from "dotenv";
 import { lookup } from "mime-types";
-import { FilebaseStorage } from "$lib/filebase";
-import type { FilebaseSettings } from "$lib/settings";
-import { logger } from "$lib/logger";
+import { FilebaseStorage } from "$lib/server/filebase";
+import type { FilebaseSettings } from "$lib/server/settings";
+import { logger } from "$lib/server/logger";
 import { env } from "$env/dynamic/private";
 
 dotenv.config();
