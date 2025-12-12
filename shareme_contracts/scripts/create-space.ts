@@ -3,7 +3,7 @@ const { ethers, networkHelpers } = await hre.network.connect();
 
 async function main() {
   const [deployer] = await ethers.getSigners();
-  const factoryAddress = "0x677577fE1b811D1B989F141fC0B9eb7c1e4a924d";
+  const factoryAddress = "0xa9A5ccb6cd45451189A61F7c15ACb96a03e87D99";
   const factory = await ethers.getContractAt(
     "SmartWalletFactory",
     factoryAddress
