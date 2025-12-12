@@ -1,13 +1,17 @@
 <script lang="ts">
-    import { contentStore, currentStep } from '$lib/stores/createContent';
-    import { toast } from '$lib/stores/toast';
+    import { contentStore, currentStep } from "$lib/stores/createContent";
+    import { toast } from "$lib/stores/toast";
 
     let fileInput: HTMLInputElement;
     let selectedFile: File | null = null;
     let isDragging = false;
+    let isUploading = false;
+    let uploadProgress = 0;
+    let fileUrl = "";
 
-    contentStore.subscribe(data => {
+    contentStore.subscribe((data) => {
         selectedFile = data.file;
+        fileUrl = data.fileUrl;
     });
 
     function handleFileSelect(event: Event) {
@@ -21,7 +25,7 @@
     function validateAndSetFile(file: File) {
         const maxSize = 100 * 1024 * 1024; // 100MB
         if (file.size > maxSize) {
-            toast.error('File size exceeds 100MB limit');
+            toast.error("File size exceeds 100MB limit");
             return;
         }
 
@@ -33,25 +37,39 @@
         const formData = new FormData();
         formData.append("file", file);
 
-        try {
-            const response = await fetch('/api/upload', {
-                method: 'POST',
-                body: formData,
-            });
+        isUploading = true;
+        uploadProgress = 0;
 
-            if (!response.ok) {
-                throw new Error('Upload failed');
+        const xhr = new XMLHttpRequest();
+
+        xhr.upload.addEventListener("progress", (event) => {
+            if (event.lengthComputable) {
+                uploadProgress = Math.round((event.loaded / event.total) * 100);
             }
+        });
 
-            const result = await response.json();
-            contentStore.setFile(file, result.url);
-            toast.success(`File "${file.name}" uploaded!`);
+        xhr.addEventListener("load", () => {
+            isUploading = false;
+            if (xhr.status === 201) {
+                const result = JSON.parse(xhr.responseText);
+                contentStore.setFile(file, result.url);
+                toast.success(`File "${file.name}" uploaded!`);
+            } else {
+                toast.error("File upload failed");
+                console.error(xhr.responseText);
+                removeFile();
+            }
+        });
 
-        } catch (error) {
-            toast.error('File upload failed');
-            console.error(error);
-            selectedFile = null;
-        }
+        xhr.addEventListener("error", () => {
+            isUploading = false;
+            toast.error("File upload failed");
+            console.error("An error occurred during the upload");
+            removeFile();
+        });
+
+        xhr.open("POST", "/api/upload", true);
+        xhr.send(formData);
     }
 
     function handleDragOver(event: DragEvent) {
@@ -67,7 +85,7 @@
     function handleDrop(event: DragEvent) {
         event.preventDefault();
         isDragging = false;
-        
+
         const file = event.dataTransfer?.files[0];
         if (file) {
             validateAndSetFile(file);
@@ -80,23 +98,27 @@
 
     function removeFile() {
         selectedFile = null;
-        contentStore.setFile(null, '');
+        contentStore.setFile(null, "");
         if (fileInput) {
-            fileInput.value = '';
+            fileInput.value = "";
         }
+        uploadProgress = 0;
+        isUploading = false;
     }
 
     function formatFileSize(bytes: number): string {
-        if (bytes === 0) return '0 Bytes';
+        if (bytes === 0) return "0 Bytes";
         const k = 1024;
-        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const sizes = ["Bytes", "KB", "MB", "GB"];
         const i = Math.floor(Math.log(bytes) / Math.log(k));
-        return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+        return (
+            Math.round((bytes / Math.pow(k, i)) * 100) / 100 + " " + sizes[i]
+        );
     }
 
     function handleNext() {
-        if (!selectedFile) {
-            toast.error('Please select a file');
+        if (!selectedFile || !fileUrl) {
+            toast.error("Please select and upload a file");
             return;
         }
         currentStep.set(3);
@@ -119,7 +141,7 @@
                 role="button"
                 tabindex="0"
                 on:click={triggerFileInput}
-                on:keydown={(e) => e.key === 'Enter' && triggerFileInput()}
+                on:keydown={(e) => e.key === "Enter" && triggerFileInput()}
                 on:dragover={handleDragOver}
                 on:dragleave={handleDragLeave}
                 on:drop={handleDrop}
@@ -128,14 +150,18 @@
             >
                 <div class="upload-icon">📤</div>
                 <p class="upload-text">
-                    {isDragging ? 'Drop your file here' : 'Drag & drop your file here'}
+                    {isDragging
+                        ? "Drop your file here"
+                        : "Drag & drop your file here"}
                 </p>
                 <p class="upload-subtext">or click to browse</p>
-                <p class="upload-hint">PDF, Video, Images, Code, 3D Assets - Max 100MB</p>
+                <p class="upload-hint">
+                    PDF, Video, Images, Code, 3D Assets - Max 100MB
+                </p>
             </div>
-            <input 
-                type="file" 
-                class="hidden" 
+            <input
+                type="file"
+                class="hidden"
                 bind:this={fileInput}
                 on:change={handleFileSelect}
                 accept="*/*"
@@ -143,13 +169,13 @@
         {:else}
             <div class="file-preview">
                 <div class="file-icon">
-                    {#if selectedFile.type.startsWith('image/')}
+                    {#if selectedFile.type.startsWith("image/")}
                         🖼️
-                    {:else if selectedFile.type.startsWith('video/')}
+                    {:else if selectedFile.type.startsWith("video/")}
                         🎥
-                    {:else if selectedFile.type.includes('pdf')}
+                    {:else if selectedFile.type.includes("pdf")}
                         📄
-                    {:else if selectedFile.type.startsWith('audio/')}
+                    {:else if selectedFile.type.startsWith("audio/")}
                         🎵
                     {:else}
                         📎
@@ -158,11 +184,31 @@
                 <div class="file-info">
                     <h4 class="file-name">{selectedFile.name}</h4>
                     <p class="file-meta">
-                        {formatFileSize(selectedFile.size)} • {selectedFile.type || 'Unknown type'}
+                        {formatFileSize(selectedFile.size)} • {selectedFile.type ||
+                            "Unknown type"}
                     </p>
-                    <div class="file-status">✓ Ready to upload</div>
+                    {#if isUploading}
+                        <div class="progress-bar-container">
+                            <div
+                                class="progress-bar-fill"
+                                style="width: {uploadProgress}%"
+                            ></div>
+                        </div>
+                        <div class="file-status">
+                            Uploading...
+                        </div>
+                    {:else if fileUrl}
+                        <div class="file-status success">✓ Upload complete</div>
+                    {:else}
+                        <div class="file-status">Waiting to upload...</div>
+                    {/if}
                 </div>
-                <button on:click={removeFile} class="remove-btn" title="Remove file">
+                <button
+                    on:click={removeFile}
+                    class="remove-btn"
+                    title="Remove file"
+                    disabled={isUploading}
+                >
                     ✕
                 </button>
             </div>
@@ -170,11 +216,24 @@
     </div>
 
     <div class="step-actions">
-        <button on:click={handleBack} class="btn-secondary">
+        <button
+            on:click={handleBack}
+            class="btn-secondary"
+            disabled={isUploading}
+        >
             ← Back
         </button>
-        <button on:click={handleNext} class="btn-primary" disabled={!selectedFile}>
-            Continue →
+        <button
+            on:click={handleNext}
+            class="btn-primary"
+            disabled={!fileUrl || isUploading}
+        >
+            {#if isUploading}
+                <div class="spinner"></div>
+                <span>Uploading...</span>
+            {:else}
+                <span>Continue →</span>
+            {/if}
         </button>
     </div>
 </div>
@@ -267,11 +326,35 @@
 
     .file-status {
         display: inline-block;
-        background: rgba(34, 197, 94, 0.2);
-        color: rgb(34, 197, 94);
+        background: rgba(255, 255, 255, 0.1);
+        color: rgba(255, 255, 255, 0.7);
         font-size: 0.75rem;
         padding: 0.25rem 0.75rem;
         border-radius: 0.25rem;
+    }
+
+    .file-status.success {
+        background: rgba(34, 197, 94, 0.2);
+        color: rgb(34, 197, 94);
+    }
+
+    .progress-bar-container {
+        height: 0.5rem;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 1rem;
+        overflow: hidden;
+        margin-bottom: 0.5rem;
+    }
+
+    .progress-bar-fill {
+        height: 100%;
+        background: linear-gradient(
+            to right,
+            rgb(147, 51, 234),
+            rgb(219, 39, 119)
+        );
+        transition: width 0.3s ease;
+        border-radius: 1rem;
     }
 
     .remove-btn {
@@ -286,8 +369,13 @@
         font-size: 1.25rem;
     }
 
-    .remove-btn:hover {
+    .remove-btn:hover:not(:disabled) {
         background: rgba(239, 68, 68, 0.2);
+    }
+
+    .remove-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
     }
 
     .hidden {
@@ -312,9 +400,17 @@
     }
 
     .btn-primary {
-        background: linear-gradient(to right, rgb(147, 51, 234), rgb(219, 39, 119));
+        background: linear-gradient(
+            to right,
+            rgb(147, 51, 234),
+            rgb(219, 39, 119)
+        );
         color: white;
         flex: 1;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 0.5rem;
     }
 
     .btn-primary:hover:not(:disabled) {
@@ -333,7 +429,27 @@
         color: white;
     }
 
-    .btn-secondary:hover {
+    .btn-secondary:hover:not(:disabled) {
         background: rgba(255, 255, 255, 0.1);
+    }
+
+    .btn-secondary:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    .spinner {
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        border-top-color: white;
+        border-radius: 50%;
+        width: 1.2em;
+        height: 1.2em;
+        animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+        to {
+            transform: rotate(360deg);
+        }
     }
 </style>
