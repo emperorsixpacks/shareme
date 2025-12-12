@@ -1,0 +1,24 @@
+<svg width="200" height="200" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Purple gradient for the shapes -->
+    <linearGradient id="shapeGradient" x1="0" y1="50" x2="0" y2="150" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#4C1D95"/>   <!-- purple-900 -->
+      <stop offset="100%" stop-color="#7C3AED"/> <!-- purple-500 -->
+    </linearGradient>
+
+    <!-- Light highlight at the top of shapes -->
+    <radialGradient id="shapeHighlight" cx="100" cy="40" r="90" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="rgba(255,255,255,0.35)"/>
+      <stop offset="100%" stop-color="rgba(255,255,255,0)"/>
+    </radialGradient>
+  </defs>
+
+  <!-- Main gradient shapes -->
+  <path d="M89 76C89 62.7452 99.7452 52 113 52C126.255 52 137 62.7452 137 76V90L89 100V76Z" fill="url(#shapeGradient)"/>
+  <path d="M64 110L88 105L112 100V124C112 137.255 101.255 148 88 148C74.7452 148 64 137.255 64 124V110Z" fill="url(#shapeGradient)"/>
+
+  <!-- Highlight overlay -->
+  <path d="M89 76C89 62.7452 99.7452 52 113 52C126.255 52 137 62.7452 137 76V90L89 100V76Z" fill="url(#shapeHighlight)"/>
+  <path d="M64 110L88 105L112 100V124C112 137.255 101.255 148 88 148C74.7452 148 64 137.255 64 124V110Z" fill="url(#shapeHighlight)"/>
+</svg>
+
