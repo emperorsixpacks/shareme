@@ -259,7 +259,7 @@ function addAllowedAsset(address _token) external onlyController
 function updatePlatformFee(uint256 newFee) external onlyController
 ```
 
-**Deployed Address (Fuji):** `0x677577fE1b811D1B989F141fC0B9eb7c1e4a924d`
+**Deployed Address (Fuji):** `0xa9A5ccb6cd45451189A61F7c15ACb96a03e87D99`
 
 ### SmartWalletFactory Contract
 
