@@ -23,4 +23,4 @@ export const PAYMENT_AMOUNTS = {
 };
 
 // SmartWallet Factory contract address on Avalanche Fuji
-export const SMART_WALLET_FACTORY_ADDRESS = "0x677577fE1b811D1B989F141fC0B9eb7c1e4a924d";
+export const SMART_WALLET_FACTORY_ADDRESS = "0xa9A5ccb6cd45451189A61F7c15ACb96a03e87D99";

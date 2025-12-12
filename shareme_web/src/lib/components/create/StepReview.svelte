@@ -48,7 +48,7 @@
             console.log("Content saved:", savedContent);
 
             // 2. Create the smart contract wallet
-            const factoryAddress = "0x677577fE1b811D1B989F141fC0B9eb7c1e4a924d";
+            const factoryAddress = "0xa9A5ccb6cd45451189A61F7c15ACb96a03e87D99";
             const abi = [
                 "function createWallet(bytes32 salt) public returns (address)",
                 {
@@ -158,6 +158,11 @@
     function handleBack() {
         currentStep.set(data.contentType === "article" ? 4 : 5);
     }
+
+    function handleCreateAnother() {
+        contentStore.reset();
+        currentStep.set(0);
+    }
 </script>
 
 <div class="step-container">
@@ -189,9 +194,17 @@
                     </button>
                 </div>
 
-                <a href={shareLink} target="_blank" class="view-link">
-                    View Content →
-                </a>
+                <div class="actions-container">
+                    <a href={shareLink} target="_blank" class="view-link">
+                        View Content →
+                    </a>
+                    <button
+                        on:click={handleCreateAnother}
+                        class="btn-secondary"
+                    >
+                        Create Another
+                    </button>
+                </div>
             </div>
         {:else}
             <div class="review-card">
@@ -412,16 +425,26 @@
         transform: translateY(-2px);
     }
 
+    .actions-container {
+        display: flex;
+        justify-content: center;
+        gap: 1rem;
+        margin-top: 1.5rem;
+    }
+
     .view-link {
         display: inline-block;
         color: rgb(34, 197, 94);
         text-decoration: none;
         font-weight: 600;
         transition: all 0.3s ease;
+        padding: 0.75rem 1.5rem;
+        border: 1px solid rgb(34, 197, 94);
+        border-radius: 0.5rem;
     }
 
     .view-link:hover {
-        color: rgb(22, 163, 74);
-        transform: translateX(4px);
+        background: rgba(34, 197, 94, 0.1);
+        transform: translateY(-2px);
     }
 </style>
