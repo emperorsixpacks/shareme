@@ -47,18 +47,22 @@ if (hasThirdwebCredentials) {
 
 // Initialize Filebase Storage
 const filebaseSettings: FilebaseSettings = {
-  filebase_access_key: env.FILEBASE_ACCESS_KEY || '',
-  filebase_secret_access_key: env.FILEBASE_SECRET_ACCESS_KEY || '',
-  filebase_bucket_name: env.FILEBASE_BUCKET_NAME || '',
+  filebase_access_key: env.FILEBASE_ACCESS_KEY || "",
+  filebase_secret_access_key: env.FILEBASE_SECRET_ACCESS_KEY || "",
+  filebase_bucket_name: env.FILEBASE_BUCKET_NAME || "",
 };
 
 const filebaseStorage = new FilebaseStorage(filebaseSettings);
 
 // Helper to parse Filebase URL to get objectName and folderPath
-function parseFilebaseUrl(url: string): { objectName: string; folderPath: string } | null {
+function parseFilebaseUrl(
+  url: string,
+): { objectName: string; folderPath: string } | null {
   try {
     const urlObj = new URL(url);
-    const pathSegments = urlObj.pathname.split('/').filter(segment => segment !== '');
+    const pathSegments = urlObj.pathname
+      .split("/")
+      .filter((segment) => segment !== "");
     if (pathSegments.length >= 2) {
       const folderPath = pathSegments[pathSegments.length - 2];
       const objectName = pathSegments[pathSegments.length - 1];
@@ -70,12 +74,17 @@ function parseFilebaseUrl(url: string): { objectName: string; folderPath: string
   return null;
 }
 
-async function downloadFileFromStorage(share: any): Promise<[Buffer | null, Error | null]> {
+async function downloadFileFromStorage(
+  share: any,
+): Promise<[Buffer | null, Error | null]> {
   const parsedUrl = parseFilebaseUrl(share.content);
   if (!parsedUrl) {
     return [null, new Error("Invalid Filebase URL in share.content")];
   }
-  return filebaseStorage.downloadFromBucket(parsedUrl.objectName, parsedUrl.folderPath);
+  return filebaseStorage.downloadFromBucket(
+    parsedUrl.objectName,
+    parsedUrl.folderPath,
+  );
 }
 
 export const GET: RequestHandler = async ({ request, params }) => {

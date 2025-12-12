@@ -18,5 +18,105 @@
     "walletAddress": "0xa131c0C8814f666B49d4c00251130241f74B1B4D",
     "fileName": "Ellipse 24.png",
     "createdAt": "2025-12-09T02:48:52.074Z"
+  },
+  {
+    "id": "9e7c637c-647a-4ff9-b72f-7e66ccd51b1e",
+    "content": "https://shareme-bucket.s3.filebase.com/uploads/uploads/1e5614c2-3a9d-407e-b36a-581242639120.png",
+    "price": 0.01,
+    "contentType": "file",
+    "title": "hello world",
+    "walletAddress": "0xc8Fc0132188454c2D7f5167E10C98Fcd67bf35a3",
+    "fileName": "Untitled.png",
+    "createdAt": "2025-12-11T23:45:15.824Z"
+  },
+  {
+    "id": "e1c99507-1073-4a73-bf84-dfb0643746e3",
+    "content": "https://shareme-bucket.s3.filebase.com/uploads/uploads/2632b485-6c68-4a15-896f-dbf760f0a750.pdf",
+    "price": 0.01,
+    "contentType": "file",
+    "title": "human assets",
+    "walletAddress": "0xabC6A6AD1fa7d435ffA379b739575dB451262C41",
+    "fileName": "Automate the Boring Stuff with Python.pdf",
+    "createdAt": "2025-12-12T12:07:31.319Z"
+  },
+  {
+    "id": "f36415c5-ecd9-49a4-9fa8-998b08e096f5",
+    "content": "https://shareme-bucket.s3.filebase.com/uploads/uploads/2632b485-6c68-4a15-896f-dbf760f0a750.pdf",
+    "price": 0.01,
+    "contentType": "file",
+    "title": "human assets",
+    "walletAddress": "0xa35ef2517426262cea58b8BDd2a6198E17E092D6",
+    "fileName": "Automate the Boring Stuff with Python.pdf",
+    "createdAt": "2025-12-12T12:10:42.708Z"
+  },
+  {
+    "id": "046645d9-c231-4323-9d9f-71de885cf981",
+    "content": "https://shareme-bucket.s3.filebase.com/uploads/uploads/c6f6a0a8-ffe7-4662-b850-e6f689372bc9.pdf",
+    "price": 0.01,
+    "contentType": "file",
+    "title": "how to code in python",
+    "walletAddress": "0xD4f6AB6aB87c50aAEE729DF46EC475fC3C3f118f",
+    "fileName": "Automate the Boring Stuff with Python.pdf",
+    "createdAt": "2025-12-12T13:57:22.449Z"
+  },
+  {
+    "id": "74330055-76a0-4c99-8bda-b39e7bcd475f",
+    "content": "https://shareme-bucket.s3.filebase.com/uploads/uploads/3e16edbb-de8b-41a6-84ad-2256a935c67f.pdf",
+    "price": 0.01,
+    "contentType": "file",
+    "title": "how to break a neck",
+    "walletAddress": "0xE969053ee30e1f04aE081307F5B18f4B8DA59A60",
+    "fileName": "Automate the Boring Stuff with Python.pdf",
+    "createdAt": "2025-12-12T14:29:44.773Z"
+  },
+  {
+    "id": "45ab1ada-c98f-4bdd-8a74-2fe68ca8c747",
+    "content": "https://shareme-bucket.s3.filebase.com/uploads/uploads/82fdc63c-a2f8-4aa6-85fe-d2580c18384c.pdf",
+    "price": 0.05,
+    "contentType": "file",
+    "title": "How to code in python",
+    "walletAddress": null,
+    "fileName": "Automate the Boring Stuff with Python.pdf",
+    "createdAt": "2025-12-12T15:15:20.852Z"
+  },
+  {
+    "id": "6614596b-fd82-4fe3-9e38-6c8ecf0ff009",
+    "content": "https://shareme-bucket.s3.filebase.com/uploads/uploads/94888b50-c583-4270-b639-efafa01643f7.pdf",
+    "price": 0.05,
+    "contentType": "file",
+    "title": "how to code in python",
+    "walletAddress": "0xF13EFA66Cd42e9740130f417cdaa6c11b6f0aA69",
+    "fileName": "Automate the Boring Stuff with Python.pdf",
+    "createdAt": "2025-12-12T15:18:28.359Z"
+  },
+  {
+    "id": "cadd606b-2162-4280-99f9-560ea365d227",
+    "content": "<p># How to Make Money: A Quick Guide</p><p>Making money is something everyone wants to do, but the approach depends on your skills, resources, and creativity. Here’s a simple guide to get you started.</p><p>## 1. Freelancing</p><p>If you have skills like writing, graphic design, coding, or video editing, you can offer your services online. Platforms like <strong>Upwork</strong>, <strong>Fiverr</strong>, and <strong>Freelancer</strong> make it easy to find clients.</p><p>## 2. Selling Products</p><p>You can sell products online or offline. This can be physical goods like crafts, clothes, or electronics, or digital products like e-books or courses. Platforms include:</p><p>- <strong>Etsy</strong> for handmade items  </p><p>- <strong>Amazon</strong> for almost anything  </p><p>- <strong>Gumroad</strong> for digital products  </p><p>## 3. Investing</p><p>Investing your money wisely can grow your wealth over time. Some common options:</p><p>- Stocks  </p><p>- Real estate  </p><p>- Cryptocurrency (be careful!)  </p><p>## 4. Passive Income</p><p>Passive income means earning money without constant work. Some ideas:</p><p>- Renting out property  </p><p>- Affiliate marketing  </p><p>- Creating a monetized blog or YouTube channel  </p><p>## 5. Tips for Success</p><p>- Always <strong>learn new skills</strong>  </p><p>- Be <strong>consistent and patient</strong>  </p><p>- Track your earnings and expenses  </p><p>&gt; Remember: Making money takes time and effort. There’s no real “get rich quick” solution!</p><p>---</p><p><em>Disclaimer: This is a simple guide for educational purposes only.</em></p><p></p>",
+    "price": 0.05,
+    "contentType": "article",
+    "title": "how to make money ",
+    "walletAddress": "0xC19f768a7f77D93148d91a915c40980444D66339",
+    "fileName": "",
+    "createdAt": "2025-12-12T15:30:07.125Z"
+  },
+  {
+    "id": "3c06b293-d921-40df-877e-aa596733738e",
+    "content": "<p>how to make money</p>",
+    "price": 0.01,
+    "contentType": "article",
+    "title": "how to make money",
+    "walletAddress": "0x9c432aF9333Ce6A6F22e3E2b20F161693a749dA1",
+    "fileName": "",
+    "createdAt": "2025-12-12T16:06:42.675Z"
+  },
+  {
+    "id": "e29d2cfd-7405-45d6-81a3-7663ef8d0d83",
+    "content": "https://shareme-bucket.s3.filebase.com/uploads/uploads/01b42be5-17bc-4cf5-9efb-0a56ddebedf4.pdf",
+    "price": 0.01,
+    "contentType": "file",
+    "title": "how to code in python",
+    "walletAddress": "0x2254A96cc37f12362101fB9C184eB8d3E6615978",
+    "fileName": "Automate the Boring Stuff with Python.pdf",
+    "createdAt": "2025-12-12T16:19:05.802Z"
   }
 ]

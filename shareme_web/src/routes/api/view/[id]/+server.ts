@@ -89,7 +89,6 @@ export const GET: RequestHandler = async ({ request, params }) => {
   // Destructure content to avoid passing it around
   const { content, ...shareMeta } = share;
   let result: any;
-  console.log(thirdwebFacilitator);
 
   // Handle payment for paid content with real Thirdweb
   try {
@@ -109,7 +108,7 @@ export const GET: RequestHandler = async ({ request, params }) => {
       facilitator: thirdwebFacilitator,
     });
   } catch (e) {
-    console.log(e);
+    console.log(e)
     return json(
       {
         error: "Payment required",

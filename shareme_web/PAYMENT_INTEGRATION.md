@@ -167,7 +167,7 @@ interface Share {
 
 The system uses the deployed SmartWallet contracts:
 
-- **SmartWalletFactory**: `0x677577fE1b811D1B989F141fC0B9eb7c1e4a924d` (Avalanche Fuji)
+- **SmartWalletFactory**: `0xa9A5ccb6cd45451189A61F7c15ACb96a03e87D99` (Avalanche Fuji)
 - **USDC Token**: `0x5425890298aed601595a70AB815c96711a31Bc65` (Avalanche Fuji)
 
 Each creator has their own SmartWallet that:

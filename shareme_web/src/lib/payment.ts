@@ -26,9 +26,7 @@ export async function fetchWithPayment(
     await wallet.connect({ client });
 
     const normalizedFetch = createNormalizedFetch(avalancheFuji.id);
-    const fetchWithPay = wrapFetchWithPayment(normalizedFetch, client, wallet, {
-      maxValue: BigInt(10_000),
-    });
+    const fetchWithPay = wrapFetchWithPayment(normalizedFetch, client, wallet);
     return await fetchWithPay(url);
   } catch (error) {
     console.error("Payment fetch error:", error);

@@ -47,7 +47,7 @@
             if (response.ok) {
                 paymentInfo = data;
                 if (!data.price || data.price === 0) {
-                    if (data.contentType === 'article') {
+                    if (data.contentType === "article") {
                         await fetchContent();
                     } else {
                         content = data;
@@ -79,7 +79,7 @@
         try {
             const response = await fetchContentWithPayment(
                 contentId,
-                'article',
+                "article",
                 thirdwebClient,
             );
             const data = await response.json();
@@ -103,7 +103,8 @@
                         "This content requires payment to access",
                 );
             } else if (response.status === 404) {
-                error = "Content not found. It may have been deleted or the link is invalid.";
+                error =
+                    "Content not found. It may have been deleted or the link is invalid.";
                 toast.error(error);
             } else {
                 error = data.error || "Failed to load content";
@@ -131,20 +132,46 @@
 
             toast.info("Processing payment...");
 
-            if (paymentInfo.contentType === 'article') {
+            if (paymentInfo.contentType === "article") {
                 await fetchContent();
-            } else if (paymentInfo.contentType === 'file') {
+            } else if (paymentInfo.contentType === "file") {
                 const response = await fetchContentWithPayment(
                     contentId,
-                    'file',
-                    thirdwebClient
+                    "file",
+                    thirdwebClient,
                 );
 
                 if (response.ok) {
-                    toast.success("Download will begin shortly!");
-                    // Reload to reflect unlocked state (e.g., for free access next time)
-                    // A more advanced implementation could avoid a full reload.
-                    setTimeout(() => window.location.reload(), 2000);
+                    const blob = await response.blob();
+
+                    const url = URL.createObjectURL(blob);
+
+                    const contentDisposition = response.headers.get(
+                        "Content-Disposition",
+                    );
+                    let filename = "download";
+
+                    if (contentDisposition) {
+                        const match = contentDisposition.match(
+                            /filename\*?=(?:UTF-8'')?["']?([^;"']+)/i,
+                        );
+                        if (match && match[1]) {
+                            filename = decodeURIComponent(match[1]);
+                        }
+                    }
+
+                    filename = filename.replace(/ /g, "_");
+
+                    const a = document.createElement("a");
+                    a.href = url;
+                    a.download = filename;
+                    
+                    toast.success("Payment complete!");
+                    toast.info("Download starting...");
+
+                    a.click();
+
+                    URL.revokeObjectURL(url);
                 } else {
                     const data = await response.json();
                     error = data.errorMessage || "Payment failed";
@@ -163,7 +190,10 @@
 
 <svelte:head>
     <title>{pageTitle} - ShareMe</title>
-    <meta name="description" content={`View the shared content: ${pageTitle}`} />
+    <meta
+        name="description"
+        content={`View the shared content: ${pageTitle}`}
+    />
 </svelte:head>
 
 <Confetti bind:show={showConfetti} />
@@ -187,20 +217,51 @@
         {:else if paymentRequired}
             <div class="payment-required">
                 <div class="payment-icon">
-                    <svg width="64" height="64" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <circle cx="12" cy="12" r="10" stroke="url(#gradient)" stroke-width="2"/>
-                        <path d="M12 7V13M12 16H12.01" stroke="url(#gradient)" stroke-width="2" stroke-linecap="round"/>
+                    <svg
+                        width="64"
+                        height="64"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                    >
+                        <circle
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="url(#gradient)"
+                            stroke-width="2"
+                        />
+                        <path
+                            d="M12 7V13M12 16H12.01"
+                            stroke="url(#gradient)"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                        />
                         <defs>
-                            <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                                <stop offset="0%" style="stop-color:rgb(147, 51, 234);stop-opacity:1" />
-                                <stop offset="100%" style="stop-color:rgb(219, 39, 119);stop-opacity:1" />
+                            <linearGradient
+                                id="gradient"
+                                x1="0%"
+                                y1="0%"
+                                x2="100%"
+                                y2="100%"
+                            >
+                                <stop
+                                    offset="0%"
+                                    style="stop-color:rgb(147, 51, 234);stop-opacity:1"
+                                />
+                                <stop
+                                    offset="100%"
+                                    style="stop-color:rgb(219, 39, 119);stop-opacity:1"
+                                />
                             </linearGradient>
                         </defs>
                     </svg>
                 </div>
 
                 <h2 class="payment-title">Premium Content</h2>
-                <p class="payment-subtitle">Unlock this exclusive content with a one-time payment</p>
+                <p class="payment-subtitle">
+                    Unlock this exclusive content with a one-time payment
+                </p>
 
                 {#if paymentInfo}
                     <div class="payment-card">
@@ -208,27 +269,62 @@
                             <span class="price-label">Price</span>
                             <div class="price-amount">
                                 <span class="currency">$</span>
-                                <span class="amount">{paymentInfo.price || "0"}</span>
+                                <span class="amount"
+                                    >{paymentInfo.price || "0"}</span
+                                >
                                 <span class="token">USDC</span>
                             </div>
                         </div>
 
                         <div class="payment-features">
                             <div class="feature">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                                    <path d="M20 6L9 17L4 12" stroke="#22c55e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <svg
+                                    width="20"
+                                    height="20"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                >
+                                    <path
+                                        d="M20 6L9 17L4 12"
+                                        stroke="#22c55e"
+                                        stroke-width="2"
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                    />
                                 </svg>
                                 <span>Instant access after payment</span>
                             </div>
                             <div class="feature">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                                    <path d="M20 6L9 17L4 12" stroke="#22c55e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <svg
+                                    width="20"
+                                    height="20"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                >
+                                    <path
+                                        d="M20 6L9 17L4 12"
+                                        stroke="#22c55e"
+                                        stroke-width="2"
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                    />
                                 </svg>
                                 <span>Secure blockchain transaction</span>
                             </div>
                             <div class="feature">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                                    <path d="M20 6L9 17L4 12" stroke="#22c55e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <svg
+                                    width="20"
+                                    height="20"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                >
+                                    <path
+                                        d="M20 6L9 17L4 12"
+                                        stroke="#22c55e"
+                                        stroke-width="2"
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                    />
                                 </svg>
                                 <span>Support the creator directly</span>
                             </div>
@@ -236,9 +332,25 @@
 
                         {#if error && !loading}
                             <div class="payment-error">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                                    <circle cx="12" cy="12" r="10" stroke="#ef4444" stroke-width="2"/>
-                                    <path d="M12 8V12M12 16H12.01" stroke="#ef4444" stroke-width="2" stroke-linecap="round"/>
+                                <svg
+                                    width="16"
+                                    height="16"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                >
+                                    <circle
+                                        cx="12"
+                                        cy="12"
+                                        r="10"
+                                        stroke="#ef4444"
+                                        stroke-width="2"
+                                    />
+                                    <path
+                                        d="M12 8V12M12 16H12.01"
+                                        stroke="#ef4444"
+                                        stroke-width="2"
+                                        stroke-linecap="round"
+                                    />
                                 </svg>
                                 <span>{error}</span>
                             </div>
@@ -253,19 +365,58 @@
                                 <div class="spinner"></div>
                                 <span>Processing...</span>
                             {:else}
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                                    <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                    <path d="M2 17L12 22L22 17" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                    <path d="M2 12L12 17L22 12" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <svg
+                                    width="20"
+                                    height="20"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                >
+                                    <path
+                                        d="M12 2L2 7L12 12L22 7L12 2Z"
+                                        stroke="white"
+                                        stroke-width="2"
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                    />
+                                    <path
+                                        d="M2 17L12 22L22 17"
+                                        stroke="white"
+                                        stroke-width="2"
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                    />
+                                    <path
+                                        d="M2 12L12 17L22 12"
+                                        stroke="white"
+                                        stroke-width="2"
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                    />
                                 </svg>
                                 <span>Unlock Content</span>
                             {/if}
                         </button>
 
                         <p class="payment-note">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                                <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
-                                <path d="M12 16V12M12 8H12.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                            <svg
+                                width="14"
+                                height="14"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                            >
+                                <circle
+                                    cx="12"
+                                    cy="12"
+                                    r="10"
+                                    stroke="currentColor"
+                                    stroke-width="2"
+                                />
+                                <path
+                                    d="M12 16V12M12 8H12.01"
+                                    stroke="currentColor"
+                                    stroke-width="2"
+                                    stroke-linecap="round"
+                                />
                             </svg>
                             Connect your wallet to complete the payment
                         </p>
@@ -295,14 +446,23 @@
                         </div>
                     {:else if content.contentType === "file"}
                         <div class="file-download-container">
-                            <h2 class="download-title">You've unlocked a file!</h2>
-                            <p class="download-subtitle">Click the button below to download your content.</p>
+                            <h2 class="download-title">
+                                You've unlocked a file!
+                            </h2>
+                            <p class="download-subtitle">
+                                Click the button below to download your content.
+                            </p>
                             <div class="file-card">
                                 <div class="file-icon">📁</div>
                                 <div class="file-details">
-                                    <span class="file-name">{content.fileName || 'download'}</span>
+                                    <span class="file-name"
+                                        >{content.fileName || "download"}</span
+                                    >
                                 </div>
-                                <a href={`/api/download/${contentId}`} class="download-button">
+                                <a
+                                    href={`/api/download/${contentId}`}
+                                    class="download-button"
+                                >
                                     Download
                                 </a>
                             </div>
@@ -376,15 +536,24 @@
     }
 
     @keyframes float {
-        0%, 100% { transform: translateY(0px); }
-        50% { transform: translateY(-6px); }
+        0%,
+        100% {
+            transform: translateY(0px);
+        }
+        50% {
+            transform: translateY(-6px);
+        }
     }
 
     .payment-title {
         font-size: 1.25rem;
         font-weight: 700;
         margin-bottom: 0.25rem;
-        background: linear-gradient(to right, rgb(147, 51, 234), rgb(219, 39, 119));
+        background: linear-gradient(
+            to right,
+            rgb(147, 51, 234),
+            rgb(219, 39, 119)
+        );
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         background-clip: text;
@@ -397,7 +566,11 @@
     }
 
     .payment-card {
-        background: linear-gradient(135deg, rgba(147, 51, 234, 0.05) 0%, rgba(219, 39, 119, 0.05) 100%);
+        background: linear-gradient(
+            135deg,
+            rgba(147, 51, 234, 0.05) 0%,
+            rgba(219, 39, 119, 0.05) 100%
+        );
         border: 1px solid rgba(147, 51, 234, 0.2);
         border-radius: 0.875rem;
         padding: 1.25rem;
@@ -439,7 +612,11 @@
     .amount {
         font-size: 1.875rem;
         font-weight: 700;
-        background: linear-gradient(to right, rgb(147, 51, 234), rgb(219, 39, 119));
+        background: linear-gradient(
+            to right,
+            rgb(147, 51, 234),
+            rgb(219, 39, 119)
+        );
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         background-clip: text;
@@ -493,7 +670,11 @@
 
     .pay-button {
         width: 100%;
-        background: linear-gradient(to right, rgb(147, 51, 234), rgb(219, 39, 119));
+        background: linear-gradient(
+            to right,
+            rgb(147, 51, 234),
+            rgb(219, 39, 119)
+        );
         color: white;
         border: none;
         padding: 0.75rem 1.25rem;
@@ -535,7 +716,9 @@
     }
 
     @keyframes spin {
-        to { transform: rotate(360deg); }
+        to {
+            transform: rotate(360deg);
+        }
     }
 
     .payment-note {
