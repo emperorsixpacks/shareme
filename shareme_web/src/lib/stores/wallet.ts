@@ -3,6 +3,7 @@ import injectedWallets from "@web3-onboard/injected-wallets";
 import walletConnectModule from "@web3-onboard/walletconnect";
 import { writable } from "svelte/store";
 import { ethers } from "ethers";
+import shareme_logo from "$lib/assets/shareme_logo.svg";
 import type { WalletState } from "@web3-onboard/core";
 
 const injected = injectedWallets();
@@ -22,7 +23,8 @@ const onboard = Onboard({
   ],
   appMetadata: {
     name: "ShareMe",
-    icon: "<svg>...</svg>",
+    icon: shareme_logo,
+    logo: shareme_logo,
     description: "Share anything with anyone.",
   },
 });
@@ -33,8 +35,8 @@ export const signer = writable<ethers.Signer | null>(null);
 
 onboard.state.select("wallets").subscribe(async (wallets) => {
   if (wallets[0]) {
-    if (wallets[0].chains[0].id !== '0xa869') {
-      await onboard.setChain({ chainId: '0xa869' });
+    if (wallets[0].chains[0].id !== "0xa869") {
+      await onboard.setChain({ chainId: "0xa869" });
     }
     wallet.set(wallets[0]);
     const ethersProvider = new ethers.BrowserProvider(wallets[0].provider, {
@@ -53,8 +55,8 @@ onboard.state.select("wallets").subscribe(async (wallets) => {
 export const connect = async () => {
   const wallets = await onboard.connectWallet();
   if (wallets[0]) {
-    if (wallets[0].chains[0].id !== '0xa869') {
-      await onboard.setChain({ chainId: '0xa869' });
+    if (wallets[0].chains[0].id !== "0xa869") {
+      await onboard.setChain({ chainId: "0xa869" });
     }
     wallet.set(wallets[0]);
     console.log(wallets);
